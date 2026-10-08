@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Document</title>
+</head>
+
+<body>
+    <div class="nav fixed z-[99] w-full">
+        <div class="nav-panel flex justify-between items-center w-[80%] h-[60px] text-white mx-auto bg-black px-10 transition-all duration-500">
+            <div class="nav-title text-[16px] font-bold">website replication</div>
+            <div class="nav-tabs flex items-center">
+                <div class="nav-tabs-btn">home</div>
+                <div class="nav-tabs-btn ml-10">products</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="part1 w-[100%] h-[300vh] relative bg-black">
+        <div class="part1-bg h-[100vh] sticky top-0 left-0">
+            <div class="part1-bg-media h-[100%]">
+                <video autoplay muted class="h-[100%] object-cover">
+                    <source src="./assets/media.webm" type="video/webm">
+                </video>
+            </div>
+            <div class="part1-bg-canvas absolute top-0 left-0 w-[100%] h-[100%]">
+                <canvas id="frameCanvas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="part2 w-[100%] h-[300vh] relative">
+        <div class="part2-container h-[100vh] sticky top-0 left-0">
+            <div class="part2-bg absolute w-full h-[100vh] top-0 left-0">
+                <div id="part2-img1"
+                    class="part2-bg-img w-[100%] h-[100%] bg-[#1a1a1a] flex justify-center items-center">
+                    <div
+                        class="label text-transparent bg-clip-text bg-[linear-gradient(150deg,_#e61721_45%,_#fff_100%)] text-[120px] font-bold opacity-0 transition-all duration-700">
+                        +365%</div>
+                    <!-- <img src="https://www.nanfu.global/upfiles/onepage/8dde7ab6fb9b7ff9.png" alt="" srcset=""> -->
+                </div>
+            </div>
+            <div class="part2-bg absolute w-full h-[100vh] top-0 left-0">
+                <div id="part2-img2"
+                    class="part2-bg-img w-[100%] h-[100%] bg-[url('https://www.nanfu.global/upfiles/onepage/89587879c3283deb.jpg')] bg-cover bg-center">
+                </div>
+            </div>
+            <div class="part2-bg absolute w-full h-[100vh] top-0 left-0">
+                <div id="part2-img3"
+                    class="part2-bg-img w-[100%] h-[100%] bg-[url('https://www.nanfu.global/upfiles/onepage/cd3f13eb780b558f.jpg')] bg-cover bg-center">
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+
+    </script>
+</body>
+<script src="./nav.js"></script>
+<script src="./frameCanvas.js"></script>
+<script src="./clipPath.js"></script>
+
+</html>

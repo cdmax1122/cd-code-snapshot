@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Max · 欢迎你</title>
+    <style>
+        /* ===== 全局重置 & 字体 ===== */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,500;0,700;1,300&display=swap');
+
+        :root {
+            --bg-primary: #0b0d12;
+            --bg-secondary: #13171f;
+            --text-primary: #eef2f8;
+            --text-glow: #6c8cff;
+            --accent-cyan: #4dc9f6;
+            --accent-purple: #a78bfa;
+            --border-subtle: rgba(255, 255, 255, 0.06);
+        }
+
+        html,
+        body {
+            width: 100%;
+            min-height: 100vh;
+            background: var(--bg-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            /* 防止滚动 */;
+        }
+
+        /* ===== 全屏容器 ===== */
+        .hero {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background:
+                radial-gradient(ellipse at 20% 50%, rgba(76, 201, 246, 0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(167, 139, 250, 0.08) 0%, transparent 60%),
+                linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            user-select: none;
+            overflow: hidden;
+        }
+
+        /* ===== 科技感网格线 (纯CSS) ===== */
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+            mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+            -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+        }
+
+        /* ===== 浮动光晕 (装饰) ===== */
+        .glow-orbs {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .glow-orbs span {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.3;
+            animation: floatOrb 18s ease-in-out infinite alternate;
+        }
+
+        .glow-orbs span:nth-child(1) {
+            width: 50vw;
+            height: 50vw;
+            top: -10%;
+            left: -10%;
+            background: radial-gradient(circle, rgba(76, 201, 246, 0.25), transparent 70%);
+            animation-duration: 22s;
+            animation-delay: -2s;
+        }
+
+        .glow-orbs span:nth-child(2) {
+            width: 40vw;
+            height: 40vw;
+            bottom: -10%;
+            right: -10%;
+            background: radial-gradient(circle, rgba(167, 139, 250, 0.2), transparent 70%);
+            animation-duration: 26s;
+            animation-delay: -8s;
+        }
+
+        .glow-orbs span:nth-child(3) {
+            width: 30vw;
+            height: 30vw;
+            top: 30%;
+            left: 60%;
+            background: radial-gradient(circle, rgba(76, 201, 246, 0.12), transparent 70%);
+            animation-duration: 20s;
+            animation-delay: -4s;
+        }
+
+        @keyframes floatOrb {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+            100% {
+                transform: translate(4%, 6%) scale(1.2);
+            }
+        }
+
+        /* ===== 主内容 ===== */
+        .content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.25rem;
+            animation: fadeInUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+            transform: translateY(24px);
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== 问候语 ===== */
+        .greeting {
+            font-size: clamp(2.8rem, 12vw, 7rem);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+            background: linear-gradient(135deg, #ffffff 0%, #c8d6f0 40%, var(--text-glow) 80%, var(--accent-purple) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 80px rgba(108, 140, 255, 0.15);
+            animation: textPulse 6s ease-in-out infinite alternate;
+        }
+
+        @keyframes textPulse {
+            0% {
+                text-shadow: 0 0 40px rgba(108, 140, 255, 0.08);
+            }
+            100% {
+                text-shadow: 0 0 100px rgba(108, 140, 255, 0.25), 0 0 200px rgba(167, 139, 250, 0.10);
+            }
+        }
+
+        /* ===== 装饰下划线 (科技感横条) ===== */
+        .underline-bar {
+            width: clamp(60px, 20vw, 160px);
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-cyan), var(--accent-purple), transparent);
+            border-radius: 4px;
+            margin-top: -0.2rem;
+            opacity: 0.6;
+            animation: barPulse 4s ease-in-out infinite alternate;
+            box-shadow: 0 0 30px rgba(76, 201, 246, 0.15);
+        }
+
+        @keyframes barPulse {
+            0% {
+                opacity: 0.3;
+                transform: scaleX(0.9);
+            }
+            100% {
+                opacity: 0.8;
+                transform: scaleX(1.1);
+            }
+        }
+
+        /* ===== 副标题 / 状态 ===== */
+        .subtitle {
+            font-size: clamp(0.9rem, 1.4vw, 1.25rem);
+            font-weight: 300;
+            letter-spacing: 0.35em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.45);
+            margin-top: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .subtitle .dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            box-shadow: 0 0 20px rgba(76, 201, 246, 0.4);
+            animation: dotBlink 2.4s ease-in-out infinite;
+        }
+
+        @keyframes dotBlink {
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.2;
+                transform: scale(0.6);
+            }
+        }
+
+        /* ===== 底部小信息 (可选) ===== */
+        .footer-note {
+            position: absolute;
+            bottom: 2.5rem;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: 300;
+            letter-spacing: 0.15em;
+            color: rgba(255, 255, 255, 0.15);
+            z-index: 1;
+            pointer-events: none;
+            animation: fadeInUp 1.8s ease forwards;
+            opacity: 0;
+            animation-delay: 0.6s;
+        }
+
+        .footer-note span {
+            color: rgba(255, 255, 255, 0.25);
+        }
+
+        /* ===== 鼠标跟随光晕 (纯装饰) ===== */
+        .cursor-glow {
+            position: fixed;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(108, 140, 255, 0.06) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+            transform: translate(-50%, -50%);
+            transition: opacity 0.3s ease;
+            will-change: transform;
+        }
+
+        /* ===== 响应式微调 ===== */
+        @media (max-width: 640px) {
+            .greeting {
+                font-size: clamp(2.4rem, 14vw, 3.6rem);
+            }
+            .subtitle {
+                font-size: 0.75rem;
+                letter-spacing: 0.25em;
+                gap: 0.5rem;
+            }
+            .subtitle .dot {
+                width: 6px;
+                height: 6px;
+            }
+            .glow-orbs span {
+                filter: blur(60px);
+            }
+            .footer-note {
+                bottom: 1.5rem;
+                font-size: 0.6rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .content {
+                gap: 0.75rem;
+            }
+            .underline-bar {
+                width: 40px;
+                height: 1.5px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== 主容器 ===== -->
+    <section class="hero">
+
+        <!-- 浮动光晕 -->
+        <div class="glow-orbs" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+
+        <!-- 主内容 -->
+        <div class="content">
+            <h1 class="greeting">Max 欢迎你</h1>
+            <div class="underline-bar" aria-hidden="true"></div>
+            <p class="subtitle">
+                <span class="dot" aria-hidden="true"></span>
+                探索 · 创造 · 无限
+                <span class="dot" aria-hidden="true"></span>
+            </p>
+        </div>
+
+        <!-- 底部 -->
+        <div class="footer-note">
+            <span>✦</span> Max · 无限可能 <span>✦</span>
+        </div>
+
+    </section>
+
+</body>
+</html>

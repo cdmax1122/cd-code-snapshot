@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .part1 {
+            width: 100%;
+            height: 175vh;
+            background-color: #000;
+        }
+
+        .part1-wrapper {
+            width: 100%;
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            overflow: hidden;
+        }
+
+        .part1-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .part2 {
+            width: 100%;
+            height: 100vh;
+            background-color: #fff;
+        }
+
+        .part2-title {
+            width: 100%;
+            height: 10vh;
+            padding: 0 48px;
+            background-color: #fff;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .part2-title .left {
+            font-size: 64px;
+            font-weight: 600;
+        }
+
+        .part2-title .right {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .part2-video {
+            width: 70vh;
+        }
+
+        .part3 {
+            width: 100%;
+            height: 100vh;
+            background-color: pink;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="part1">
+        <div class="part1-wrapper">
+            <img src="./assets/large_2x.jpg" alt="" srcset="">
+        </div>
+    </div>
+
+
+    <div class="part2">
+        <div class="part2-title">
+            <div class="left">Phone</div>
+            <div class="right">slogan xxxxx</div>
+        </div>
+        <div class="part2-video">
+            <video autoplay muted loop>
+                <source src="./assets/display_startframe__s3kff4jwzhuq_xlarge.mp4" type="video/mp4">
+            </video>
+        </div>
+    </div>
+
+    <div class="part3"></div>
+
+    <script src="./scrollHandler.js"></script>
+</body>
+
+</html>

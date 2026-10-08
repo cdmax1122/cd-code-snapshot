@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>飞线移动-基于uv</title>
+</head>
+
+<body>
+    <script type="module">
+        import * as THREE from "https://unpkg.com/three@0.169.0/build/three.module.js";
+
+        const config = {
+            width: 700,
+            height: 400
+        }
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, config.width / config.height, 0.1, 100);
+        camera.position.set(0, 0, 15);
+
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(config.width, config.height);
+        document.body.appendChild(renderer.domElement);
+
+        // 定义路径
+        const points = [];
+        points.push(new THREE.Vector3(-10, 5, 0));
+        points.push(new THREE.Vector3(0, 5, 0));
+        points.push(new THREE.Vector3(0, 0, 0));
+        points.push(new THREE.Vector3(-10, 0, 0));
+        // 样条曲线：带插值算法的平滑曲线
+        const curve = new THREE.CatmullRomCurve3(points);
+        // 是一个管道，0.1的半径看起来像一条线一样
+        const geometry = new THREE.TubeGeometry(curve, 100, 0.1, 8, false);
+        // ShaderMaterial
+        const material = new THREE.ShaderMaterial({
+            transparent: true,
+            uniforms: {
+                uTime: { value: 0.0 },
+                // 飞线长度
+                uLength: { value: 0.2 },
+                // 飞行速度
+                uSpeed: { value: 0.5 }
+            },
+            vertexShader: `
+                // 因为uv本质是二位纹理映射,用于面片采样
+                // 而line是顶点集合,所以用不了uv处理
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                varying vec2 vUv;
+                uniform float uTime;
+                uniform float uLength;
+                uniform float uSpeed;
+
+                void main() {
+                    // 计算头尾[tail, head] => 在[0,1]范围内的一段飞线进度
+                    // 平替 mod(uTime * uSpeed, 1)
+                    float head = fract(uTime * uSpeed);
+                    float tail = head - uLength;
+
+                    // 飞线范围判断
+                    float alpha = 0.0;
+                    // 飞线飞出一半剩一半
+                    if (tail < 0.0) {
+                        // 展示范围内的颜色
+                        // uv.x是归一化的坐标。
+                        // 实际就是tube整体的0-1进度映射，不管tube是如何弯曲（如：S型等），都对应0-1
+                        // if(vUv.x >= 0.0 && vUv.x <= head) alpha = 1.0;
+                        // if(vUv.x >= 1.0 + tail && vUv.x <= 1.0) alpha = 1.0;
+
+                        // 需要将分段的映射成0-length,为了处理在头尾处的连续性
+                        float x = 0.0;
+                        // 末尾分段
+                        if (vUv.x >= 1.0 + tail) {
+                            // 当前 - 末尾 = dist
+                            // a-b, p是ab上一点。 p-a为路程
+                            x = vUv.x - (1.0 + tail);
+                        } else if (vUv.x <= head) {
+                            // 头部分段，此时[-tail, 0] 中间是当前的x [0, head];
+                            x = vUv.x - tail;
+                        }
+                        alpha = smoothstep(0.0, uLength, x);
+                    } else {
+                        if(vUv.x >= tail && vUv.x <= head) alpha = smoothstep(tail, head, vUv.x);
+                    }
+
+                    // 颜色
+                    gl_FragColor = vec4(vec3(1.0,0.0,0.0), alpha);
+                }
+            `,
+        });
+
+        const flyLine = new THREE.Mesh(geometry, material);
+        scene.add(flyLine);
+
+        // 在动画循环里更新时间
+        function animate() {
+            requestAnimationFrame(animate);
+            material.uniforms.uTime.value = performance.now() / 1000.0;
+            renderer.render(scene, camera);
+        }
+        animate();
+
+    </script>
+</body>
+
+</html>

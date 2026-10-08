@@ -1,0 +1,39 @@
+import {
+  hasVault, vaultPath, createVault, unlockVault, lockVault, isUnlocked,
+  listAccounts, getAccount, saveAccount, deleteAccount, getSettings,
+  saveSettings, backupVault, secureRandomBytes, copySensitive
+} from '@/uni_modules/vault-native'
+import { AccountEntry, VaultSettings } from '@/core/domain/models.uts'
+
+export type ServiceResult = {
+  ok: boolean
+  message: string
+}
+
+function parseResult(value: string): ServiceResult {
+  return JSON.parse<ServiceResult>(value)!
+}
+
+export class NativeVaultService {
+  exists(): boolean { return hasVault() }
+  path(): string { return vaultPath() }
+  create(masterPassword: string): ServiceResult { return parseResult(createVault(masterPassword)) }
+  unlock(masterPassword: string): ServiceResult { return parseResult(unlockVault(masterPassword)) }
+  lock(): void { lockVault() }
+  unlocked(): boolean { return isUnlocked() }
+  accounts(): AccountEntry[] { return JSON.parse<AccountEntry[]>(listAccounts())! }
+  account(id: string): AccountEntry | null {
+    const raw = getAccount(id)
+    return raw.length > 0 ? JSON.parse<AccountEntry>(raw) : null
+  }
+  save(account: AccountEntry): ServiceResult { return parseResult(saveAccount(JSON.stringify(account))) }
+  remove(id: string): ServiceResult { return parseResult(deleteAccount(id)) }
+  settings(): VaultSettings { return JSON.parse<VaultSettings>(getSettings())! }
+  updateSettings(settings: VaultSettings): ServiceResult { return parseResult(saveSettings(JSON.stringify(settings))) }
+  backup(): ServiceResult { return parseResult(backupVault()) }
+  randomBytes(length: number): number[] { return secureRandomBytes(length) }
+  copyPassword(value: string, seconds: number): void { copySensitive(value, seconds) }
+}
+
+export const vaultService = new NativeVaultService()
+

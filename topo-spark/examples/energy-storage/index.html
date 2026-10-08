@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <title>TopoSpark - 光储一体化电站监控调度系统</title>
+    <!-- 引入 Tailwind CSS CDN (仅演示用，生产环境建议构建链路) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Tailwind 无法直接处理复杂动画，这里补充少量关键帧 */
+      @keyframes scan-line {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(100%);
+        }
+      }
+      /* 等宽数据字体 */
+      body {
+        font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+      }
+      .font-mono-tech {
+        font-family: "DIN Alternate", "Roboto Mono", monospace;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-[#0A0E14] text-[#E0E6ED] overflow-hidden m-0 h-screen flex flex-col"
+  >
+    <!-- 顶部状态栏 -->
+    <header
+      class="relative flex items-center justify-between px-8 py-4 border-b border-[#1E3A5F] bg-[#0F1B2D]/50 backdrop-blur-sm z-20"
+    >
+      <h1
+        class="text-lg font-medium tracking-widest text-[#00F0FF] drop-shadow-[0_0_8px_rgba(0,240,255,0.4)]"
+      >
+        光储一体化电站监控系统
+      </h1>
+      <div
+        class="flex items-center gap-6 text-xs font-mono-tech text-[#7A8B99]"
+      >
+        <span
+          >系统状态: <em class="not-italic text-[#00FF88]">● ONLINE</em></span
+        >
+        <span id="current-time">2023-10-27 14:35:00</span>
+      </div>
+    </header>
+
+    <!-- 主画布区域 -->
+    <main id="canvas-container" class="relative flex-1 overflow-hidden">
+      <!-- 底层：拓扑图引擎 Canvas -->
+      <canvas
+        id="topology-canvas"
+        class="absolute inset-0 w-full h-full"
+      ></canvas>
+      <!-- 顶层：天气特效层 Canvas (禁用鼠标事件穿透) -->
+      <canvas
+        id="overlay-canvas"
+        class="absolute inset-0 w-full h-full pointer-events-none"
+      ></canvas>
+
+      <!-- 悬浮场景控制面板 (科技感切角+毛玻璃) -->
+      <div
+        class="absolute top-6 left-1/2 -translate-x-1/2 z-10 flex gap-3 p-2.5 bg-[rgba(10,20,40,0.75)] backdrop-blur-md border border-[rgba(0,240,255,0.3)] shadow-[0_0_15px_rgba(0,240,255,0.15)] [clip-path:polygon(12px_0,100%_0,100%_calc(100%-12px),calc(100%-12px)_100%,0_100%,0_12px)]"
+      >
+        <button
+          class="tech-btn active px-5 py-2 text-xs tracking-wider transition-all duration-300 [clip-path:polygon(8px_0,100%_0,100%_calc(100%-8px),calc(100%-8px)_100%,0_100%,0_8px)]"
+          data-scene="sunny"
+        >
+          晴天模式
+        </button>
+
+        <button
+          class="tech-btn px-5 py-2 text-xs tracking-wider transition-all duration-300 [clip-path:polygon(8px_0,100%_0,100%_calc(100%-8px),calc(100%-8px)_100%,0_100%,0_8px)]"
+          data-scene="rainy"
+        >
+          雨天模式
+        </button>
+      </div>
+
+      <!-- 悬浮提示 Tooltip (默认隐藏) -->
+      <div
+        id="topo-tooltip"
+        class="absolute hidden z-50 px-4 py-3 text-xs font-mono-tech bg-[rgba(5,15,30,0.95)] border border-[#00FF88] shadow-[0_0_10px_rgba(0,255,136,0.3)] pointer-events-none"
+      >
+        <!-- 内部内容由 JS 动态填充 -->
+        <div class="absolute top-0 left-0 w-full h-[2px] overflow-hidden">
+          <div
+            class="w-full h-full bg-[#00FF88]"
+            style="animation: scan-line 2s infinite linear"
+          ></div>
+        </div>
+        <div id="tooltip-content"></div>
+      </div>
+    </main>
+
+    <script type="module" src="./main.js"></script>
+    <script>
+      // Tailwind 无法直接定义 hover/active 的复杂发光效果，通过少量原生 JS 或 style 标签补充
+      const style = document.createElement("style");
+      style.innerHTML = `
+      .tech-btn { color: #A0AEC0; background: transparent; border: 1px solid transparent; cursor: pointer; }
+      .tech-btn:hover { color: #00F0FF; border-color: rgba(0,240,255,0.5); text-shadow: 0 0 8px rgba(0,240,255,0.6); box-shadow: inset 0 0 10px rgba(0,240,255,0.2); }
+      .tech-btn.active { color: #00F0FF; border-color: rgba(0,240,255,0.5); background: rgba(0,240,255,0.1); box-shadow: inset 0 0 10px rgba(0,240,255,0.3); }
+    `;
+      document.head.appendChild(style);
+    </script>
+  </body>
+</html>

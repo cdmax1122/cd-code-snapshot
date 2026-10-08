@@ -1,0 +1,10 @@
+import { AccountDraft } from '../domain/models.uts'
+
+export type ValidationResult = { valid: boolean; message: string }
+
+export function validateAccount(draft: AccountDraft): ValidationResult {
+  if (draft.title.trim().length == 0) return { valid: false, message: '请输入账户名称' }
+  if (draft.title.trim().length > 100) return { valid: false, message: '账户名称不能超过 100 个字符' }
+  if (draft.url.trim().length > 0 && draft.url.trim().indexOf('.') < 0) return { valid: false, message: '请输入有效的网站地址' }
+  return { valid: true, message: '' }
+}

@@ -1,0 +1,91 @@
+export type PasswordCredential = {
+  value: string
+  createdAt: number
+  updatedAt: number
+}
+
+export type PasskeyCredential = {
+  credentialId: string
+  rpId: string
+  rpName?: string
+  userHandle?: string
+  userName?: string
+  algorithm: number
+  createdAt: number
+}
+
+export type CustomField = {
+  id: string
+  name: string
+  value: string
+  secret: boolean
+}
+
+export type AccountIdentity = {
+  username?: string
+  email?: string
+}
+
+export type AccountCredentials = {
+  password?: PasswordCredential
+  passkeys?: PasskeyCredential[]
+}
+
+export type AccountEntry = {
+  id: string
+  title: string
+  urls: string[]
+  identity?: AccountIdentity
+  credentials: AccountCredentials
+  customFields: CustomField[]
+  notes: string
+  tags: string[]
+  createdAt: number
+  updatedAt: number
+}
+
+export type VaultSettings = {
+  autoLockSeconds: number
+  clipboardClearSeconds: number
+  biometricUnlockEnabled: boolean
+}
+
+export type AccountDraft = {
+  id: string
+  title: string
+  username: string
+  email: string
+  url: string
+  password: string
+  notes: string
+  tagsText: string
+  customFields: CustomField[]
+}
+
+export function emptyAccountDraft(): AccountDraft {
+  return { id: '', title: '', username: '', email: '', url: '', password: '', notes: '', tagsText: '', customFields: [] }
+}
+
+export function draftToEntry(draft: AccountDraft, now: number, createdAt: number = 0): AccountEntry {
+  const tags = draft.tagsText.split(',').map((value) => value.trim()).filter((value) => value.length > 0)
+  const credentials: AccountCredentials = { passkeys: [] }
+  if (draft.password.length > 0) {
+    credentials.password = {
+      value: draft.password,
+      createdAt: createdAt > 0 ? createdAt : now,
+      updatedAt: now
+    }
+  }
+  return {
+    id: draft.id,
+    title: draft.title.trim(),
+    urls: draft.url.trim().length > 0 ? [draft.url.trim()] : [],
+    identity: { username: draft.username.trim(), email: draft.email.trim() },
+    credentials,
+    customFields: draft.customFields,
+    notes: draft.notes,
+    tags,
+    createdAt: createdAt > 0 ? createdAt : now,
+    updatedAt: now
+  }
+}

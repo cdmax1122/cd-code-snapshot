@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地图展示</title>
+</head>
+
+<body>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.169.0/build/three.module.js"
+            }
+        }
+    </script>
+    <script type="module">
+        import * as THREE from "three";
+        import { ExtrudeGeometry } from "https://unpkg.com/three@0.169.0/src/geometries/ExtrudeGeometry.js";
+        import { OrbitControls } from "https://unpkg.com/three@0.169.0/examples/jsm/controls/OrbitControls.js";
+
+        // 场景配色
+        const colorConfig = {
+            scene_bg: '#0D1117',
+            map_top: '#1B2A49',
+            map_side: ['#3B82F6', '#0A192F'],
+        }
+
+        // 初始化场景
+        const scene = new THREE.Scene();
+        // 初始化相机
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+        camera.position.z = 800;
+
+        // 初始化渲染器
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        const axisHelper = new THREE.AxesHelper(1000);
+        scene.add(axisHelper);
+
+        // 初始化轨道控制器
+        const controls = new OrbitControls(camera, renderer.domElement);
+
+        // 背景面动效
+        const textureLoader = new THREE.TextureLoader();
+        const mapTexture = textureLoader.load('./assets/path.png');
+        
+        // 背景
+        const bg_geo = new THREE.PlaneGeometry(2000, 2000);
+        const bg_mat = new THREE.ShaderMaterial({
+            // 因为没进行坐标和投影转换
+            // depthTest: false,   // 不进行深度比较
+            vertexShader: `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                varying vec2 vUv;
+                uniform sampler2D uTexture;
+                uniform float uTime;
+                void main() {
+                vec2 center = vec2(0.5);
+
+                    // 每个像素到圆心的距离
+                    float dist = distance(vUv, center);
+
+                    // 圆环宽度
+                    float thickness = 0.1;
+
+                    // 随时间扩散的半径
+                    float outerRadius = fract(uTime) ;
+
+                    // 用 smoothstep 生成柔和的圆环遮罩
+                    float ring = smoothstep(outerRadius - thickness, outerRadius, dist)
+                            - smoothstep(outerRadius, outerRadius + thickness, dist);
+
+                    // 圆环颜色
+                    vec3 ringColor = vec3(1.0, 0.0, 0.0);
+
+
+                    // 采样路径纹理（假设路径为白色，背景透明）; fract重复10次
+                    vec4 textureColor = texture2D(uTexture, fract(vUv * 10.0)); 
+
+                    // mask = 路径区域 (用 alpha 通道)
+                    float mask = textureColor.a;
+
+                    // 沿着路径扩散 (思路上等同 if (mask === 1) effct = ring; else effect = 0)
+                    float effect = ring * mask;
+
+                    // 输出颜色
+                    gl_FragColor = vec4(ringColor, effect);
+                }
+            `,
+            uniforms: {
+                uTime: { value: 0.0 },
+                uTexture: { value: mapTexture }
+            },
+            transparent: true
+        });
+        const bg_mesh = new THREE.Mesh(bg_geo, bg_mat);
+        scene.add(bg_mesh);
+
+        // 加载GeoJSON
+        async function loadGeoJSON(url) {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`GeoJSON请求失败: ${res.status}`);
+            return res.json();
+        }
+        // 经纬度转墨卡托{x, y}
+        function lonLatToMercator(lon, lat) {
+            const R = 6378137.0;
+            const x = (lon * Math.PI / 180) * R;
+            const y = Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI / 180) / 2)) * R;
+            return { x, y };
+        }
+        // 计算包围盒用于缩放平移到中心
+        function computeBox3FromGeoJSON(coords) {
+            const box3 = new THREE.Box3();
+            coords.forEach((ringArr) => {
+                ringArr.forEach(([lon, lat]) => {
+                    const { x, y } = lonLatToMercator(lon, lat);
+                    box3.expandByPoint(new THREE.Vector3(x, y, 0));
+                });
+            });
+            return box3;
+        }
+        // 通过挤压几何体创建立体地图
+        function createMap(geoJSON, targetSize) {
+            // 筛选数据
+            const coords = [];
+            geoJSON.features.forEach(feature => {
+                if (feature.geometry.type === "Polygon") {
+                    feature.geometry.coordinates.forEach(ring => {
+                        coords.push(ring);
+                    });
+                } else if (feature.geometry.type === "MultiPolygon") {
+                    feature.geometry.coordinates.forEach(polygon => {
+                        polygon.forEach(ring => {
+                            coords.push(ring);
+                        });
+                    });
+                }
+            });
+
+            // 1. 计算所有点的墨卡托坐标
+            const allPoints = [];
+            coords.forEach(ringArr => {
+                ringArr.forEach(coord => {
+                    const { x, y } = lonLatToMercator(coord[0], coord[1]);
+                    allPoints.push(new THREE.Vector3(x, y, 0));
+                });
+            });
+
+            // 2. 计算整体包围盒
+            const box3 = new THREE.Box3();
+            allPoints.forEach(pt => box3.expandByPoint(pt));
+            const size = new THREE.Vector3();
+            box3.getSize(size);
+
+            // 3. 计算缩放比例和平移
+            // targetSize为目标最大边长
+            const scale = targetSize / Math.max(size.x, size.y);
+            const center = new THREE.Vector3();
+            box3.getCenter(center);
+
+            // 4. 组管理
+            const group = new THREE.Group();
+            coords.forEach((ringArr, ringIdx) => {
+                // 2d图形
+                const ringShape = new THREE.Shape();
+                ringArr.forEach((coord, idx) => {
+                    // 先转墨卡托，再做平移缩放
+                    let { x, y } = lonLatToMercator(coord[0], coord[1]);
+                    x = (x - center.x) * scale;
+                    y = (y - center.y) * scale;
+                    if (idx === 0) {
+                        ringShape.moveTo(x, y);
+                    } else {
+                        ringShape.lineTo(x, y);
+                    }
+                });
+
+                // 挤压：2d->3d
+                const extrudeSettings = {
+                    depth: 20.0
+                };
+                const extrudeGeo = new THREE.ExtrudeGeometry(ringShape, extrudeSettings);
+                const extrudeMesh = new THREE.Mesh(extrudeGeo, [
+                    // 材质数组分别渲染
+                    new THREE.MeshBasicMaterial({ color: new THREE.Color(colorConfig.map_top) }),
+                    new THREE.ShaderMaterial({
+                        vertexShader: `
+                            varying float vZ;
+                            void main() {
+                                vZ = position.z;
+                                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                            }
+                        `,
+                        fragmentShader: `
+                            varying float vZ;
+                            uniform vec3 uColorTop;
+                            uniform vec3 uColorBottom;
+                            uniform float uMinZ;
+                            uniform float uMaxZ;
+                            void main() {
+                                float t =  smoothstep(uMinZ, uMaxZ, vZ);
+                                vec3 linearColor = mix(uColorBottom, uColorTop, t);
+                                gl_FragColor = vec4(linearColor, t);
+                            }
+                        `,
+                        uniforms: {
+                            uMinZ: { value: 0.0 },
+                            // depth
+                            uMaxZ: { value: extrudeSettings.depth - 1.0},
+                            // 渐变
+                            uColorTop: { value: new THREE.Color(colorConfig.map_side[0]) },
+                            uColorBottom: { value: new THREE.Color(colorConfig.map_side[1]) }
+                        }
+                    })
+                ]);
+                group.add(extrudeMesh);
+
+                // 轮廓线描边
+                const lineGeo = new THREE.BufferGeometry().setFromPoints(ringShape.getPoints().reverse());
+                const lineMat = new THREE.LineBasicMaterial({color: 0xFF0000});
+                const line = new THREE.Line(lineGeo, lineMat);
+                line.position.z = extrudeSettings.depth + 0.3;
+                group.add(line);
+
+                // 大陆板块轮廓线描边
+                // if (ringIdx === 0) {                    
+                //     const lineGeo = new THREE.BufferGeometry().setFromPoints(ringShape.getPoints().reverse());
+                //     const count = lineGeo.attributes.position.count;
+                //     const percents = new Float32Array(count);
+                //     for (let i = 0; i < count; i++) {
+                //         percents[i] = i / (count - 1);
+                //     }
+                //     lineGeo.setAttribute("aPercent", new THREE.BufferAttribute(percents, 1));
+
+                //     const lineMat = new THREE.ShaderMaterial({
+                //         uniforms: {
+                //             uTime: { value: 0.0 },
+                //             uLength: { value: 0.5 },
+                //             uSpeed: { value: 0.2 }
+                //         },
+                //         vertexShader: `
+                //             attribute float aPercent;
+                //             varying float vPercent;
+                //             void main() {
+                //                 vPercent = aPercent;
+                //                 gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                //             }
+                //         `,
+                //         fragmentShader: `
+                //             varying float vPercent;
+                //             uniform float uTime;
+                //             uniform float uLength;
+                //             uniform float uSpeed;
+
+                //             void main() {
+                //                 // 计算头尾[tail, head] => 在[0,1]范围内的一段飞线进度
+                //                 // 平替 mod(uTime * uSpeed, 1)
+                //                 float head = fract(uTime * uSpeed);
+                //                 float tail = head - uLength;
+
+                //                 // 飞线范围判断
+                //                 float alpha = 0.0;
+                //                 // 飞线飞出一半剩一半
+                //                 if (tail < 0.0) {
+                //                     // 展示范围内的颜色
+                //                     if(vPercent >= 0.0 && vPercent <= head) alpha = 1.0;
+                //                     if(vPercent >= 1.0 + tail && vPercent <= 1.0) alpha = 1.0;
+                //                 } else {
+                //                     if(vPercent >= tail && vPercent <= head) alpha = 1.0;
+                //                 }
+
+                //                 // 颜色
+                //                 gl_FragColor = vec4(vec3(1.0,0.0,0.0), alpha);
+                //             }
+                //         `,
+                //     })
+                //     const line = new THREE.Line(lineGeo, lineMat);
+                //     // (因为shape是z=0的，所以描边需要z=21)
+                //     line.position.z = 21;
+                //     group.add(line);
+                // }
+
+            });
+            return group;
+        }
+        // 根据geojson绘制轮廓线
+        function createOutline(geoJSON) {
+            const outlineMesh = new THREE.Mesh(geoJSON.geometry, new THREE.MeshBasicMaterial({color: 0xFF0000}));
+            scene.add(outlineMesh);
+        }
+        // 初始化
+        async function init() {
+            const GeoJSON = await loadGeoJSON("./assets/china.json");
+            const mapMesh = createMap(GeoJSON, 1000);
+            scene.add(mapMesh);
+            renderer.render(scene, camera);
+        }
+        // 动画
+        function animate() {
+            requestAnimationFrame(animate);
+
+            bg_mat.uniforms.uTime.value += 0.01;
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        init();
+        animate();
+    </script>
+</body>
+
+</html>

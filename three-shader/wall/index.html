@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>电子围栏</title>
+</head>
+
+<body>
+  <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.169.0/build/three.module.js"
+            }
+        }
+    </script>
+  <script type="module">
+    import * as THREE from "three";
+    import { OrbitControls } from "https://unpkg.com/three@0.169.0/examples/jsm/controls/OrbitControls.js";
+    // 初始化场景
+    const scene = new THREE.Scene();
+    // 初始化相机
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+    camera.position.z = -200;
+    camera.position.x = 200;
+    camera.position.y = 200;
+
+    // 初始化渲染器
+    const renderer = new THREE.WebGLRenderer({antialias: true});
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // 初始化轨道控制器
+    const controls = new OrbitControls(camera, renderer.domElement);
+
+    // 添加坐标轴辅助器
+    const axisHelper = new THREE.AxesHelper(1000);
+    scene.add(axisHelper);
+
+    // 自定义平面围栏坐标 （地图上需要经纬度转墨卡托坐标）
+    const fenceCoords = [
+      [0, 0],
+      [100, 0],
+      [100, 100],
+      [0, 100]
+    ];
+    // 2 shape挤压生成围栏
+    const shape = new THREE.Shape();
+    fenceCoords.forEach((coord, idx) => {
+      if (idx === 0) {
+        shape.moveTo(coord[0], coord[1]);
+      } else {
+        shape.lineTo(coord[0], coord[1]);
+      }
+    });
+
+    const extrudeSettings = {
+      depth: 60
+    };
+    // uv纹理需要自定义映射。因为使用的是shape
+    const extrudeGeometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+    const materialArray = [
+      // 顶面
+      new THREE.MeshBasicMaterial({
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+      }),
+      // 侧面：重复条纹
+      new THREE.ShaderMaterial({
+        vertexShader: `
+            varying float vZ;
+            void main() {
+                vZ = position.z;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `,
+        fragmentShader: `
+            varying float vZ;
+            uniform vec3 uColorTop;
+            uniform vec3 uColorBottom;
+            uniform float uMinZ;
+            uniform float uMaxZ;
+            uniform float uTime;
+            void main() {
+                // 归一化
+                float t =  vZ / uMaxZ;
+                // 重复条纹
+                float color = step(0.5, fract(t * 4.0 - uTime));
+                // 输出颜色
+                gl_FragColor = vec4(vec3(color), 1.0);
+            }
+        `,
+        transparent: true,
+        side: THREE.DoubleSide,
+        uniforms: {
+          uColorTop: { value: new THREE.Color(0x00ffff) },
+          uColorBottom: { value: new THREE.Color(0x00ffff) },
+          uMinZ: { value: 0.0 },
+          uMaxZ: { value: extrudeSettings.depth },
+          uTime: { value: 0.0 }
+        }
+      })
+    ];
+
+    const fence = new THREE.Mesh(extrudeGeometry, materialArray);
+    fence.rotateX(-Math.PI / 2);
+    scene.add(fence);
+
+    // 动画
+    function animate() {
+      requestAnimationFrame(animate);
+      materialArray[1].uniforms.uTime.value += 0.02;
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    // 初始化
+    animate();
+  </script>
+</body>
+
+</html>

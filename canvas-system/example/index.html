@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spatial Canvas · Pixi Demo</title>
+  </head>
+  <body>
+    <main id="app">
+      <section class="intro">
+        <p class="eyebrow">SPATIAL CANVAS / PIXI.JS</p>
+        <h1>空间图片画布</h1>
+        <p class="description">
+          图片节点保持原始内容，系统只负责位置、关系、摄像机与交互。
+        </p>
+        <div class="tips">
+          <span>拖动图片</span>
+          <span>拖动空白平移</span>
+          <span>滚轮缩放</span>
+          <span>Shift 多选</span>
+        </div>
+        <p id="status" class="status">未选择节点</p>
+      </section>
+
+      <section id="canvas-host" class="canvas-host" aria-label="空间画布">
+        <div class="canvas-badge">LIVE CANVAS</div>
+      </section>
+    </main>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
+

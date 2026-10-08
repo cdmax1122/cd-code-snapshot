@@ -1,0 +1,29 @@
+<template>
+  <view class="page launch-page">
+    <view class="mark"><text class="mark-text">钥</text></view>
+    <text class="brand">透明本地保险箱</text>
+    <text class="muted launch-note">正在检查本地保险箱…</text>
+  </view>
+</template>
+
+<script lang="uts">
+import { vaultService } from '../../services/native-vault.uts'
+
+export default {
+  onReady() {
+    let target = '/pages/onboarding/index'
+    if (vaultService.unlocked()) target = '/pages/vault/index'
+    else if (vaultService.exists()) target = '/pages/unlock/index'
+    uni.reLaunch({ url: target })
+  }
+}
+</script>
+
+<style>
+.launch-page { align-items: center; justify-content: center; }
+.mark { width: 64px; height: 64px; border-radius: 18px; background-color: #176B4D; align-items: center; justify-content: center; }
+.mark-text { color: #FFFFFF; font-size: 28px; font-weight: 700; }
+.brand { margin-top: 18px; font-size: 22px; font-weight: 700; }
+.launch-note { margin-top: 10px; }
+</style>
+

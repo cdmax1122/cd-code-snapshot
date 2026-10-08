@@ -1,0 +1,18 @@
+{
+  "scene": "rainy",
+  "nodes": [
+    { "id": "pv", "label": "光伏阵列", "icon": "./assets/icons/pv.svg", "w": 92, "h": 74, "data": { "commStatus": "offline", "workStatus": "standby", "statusText": "通信离线", "power": 0, "description": "雨天无有效出力，通信不可用时不展示业务状态" } },
+    { "id": "inverter", "label": "光伏逆变器", "icon": "./assets/icons/inverter.svg", "w": 92, "h": 74, "data": { "commStatus": "online", "workStatus": "standby", "statusText": "通信在线 / 待机", "power": 0, "description": "光伏侧停机等待" } },
+    { "id": "bus", "label": "交流母线", "icon": "./assets/icons/bus.svg", "w": 110, "h": 68, "data": { "commStatus": "online", "workStatus": "running", "statusText": "通信在线 / 汇流", "power": 450, "description": "接受储能侧反向供电" } },
+    { "id": "pcs", "label": "储能变流器(PCS)", "icon": "./assets/icons/pcs.svg", "w": 104, "h": 74, "data": { "commStatus": "online", "workStatus": "discharging", "statusText": "通信在线 / 放电逆变", "power": 470, "description": "电池直流逆变为交流" } },
+    { "id": "battery", "label": "电池簇", "icon": "./assets/icons/battery.svg", "w": 92, "h": 74, "data": { "commStatus": "online", "workStatus": "discharging", "statusText": "通信在线 / 放电", "power": 480, "description": "雨天保电主能源" } },
+    { "id": "load", "label": "用电负载", "icon": "./assets/icons/load.svg", "w": 92, "h": 74, "data": { "commStatus": "online", "workStatus": "running", "statusText": "通信在线 / 运行", "power": 430, "description": "由电池经 PCS 供电" } }
+  ],
+  "edges": [
+    { "id": "e-pv-inverter", "source": "pv", "target": "inverter", "isActive": false, "direction": "forward", "speed": 0, "value": 0, "effect": "dash" },
+    { "id": "e-inverter-bus", "source": "inverter", "target": "bus", "isActive": false, "direction": "forward", "speed": 0, "value": 0, "effect": "particle" },
+    { "id": "e-bus-pcs", "source": "bus", "target": "pcs", "isActive": true, "direction": "reverse", "speed": 8, "value": 470, "effect": "dash" },
+    { "id": "e-pcs-battery", "source": "pcs", "target": "battery", "isActive": true, "direction": "reverse", "speed": 9, "value": 480, "effect": "texture" },
+    { "id": "e-bus-load", "source": "bus", "target": "load", "isActive": true, "direction": "forward", "speed": 6, "value": 430, "effect": "particle" }
+  ]
+}

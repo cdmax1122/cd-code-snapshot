@@ -1,0 +1,143 @@
+<template>
+  <scroll-view class="page" scroll-y="true">
+    <text class="page-title">{{ id.length > 0 ? '编辑账户' : '新增账户' }}</text>
+    <text class="subtitle">账户是用户名、Password、未来 Passkey 和备注的统一容器。</text>
+
+    <text class="field-label">账户名称 *</text>
+    <input class="field" v-model="draft.title" placeholder="例如 GitHub" />
+    <text class="field-label">网站</text>
+    <input class="field" v-model="draft.url" placeholder="https://example.com" />
+    <text class="field-label">用户名</text>
+    <input class="field" v-model="draft.username" placeholder="用户名" />
+    <text class="field-label">邮箱</text>
+    <input class="field" v-model="draft.email" placeholder="name@example.com" />
+
+    <view class="password-label"><text class="field-label label-reset">密码</text><button class="inline-button" @click="generate">安全生成</button></view>
+    <view class="password-row">
+      <input class="field password-input" :password="!showPassword" v-model="draft.password" placeholder="输入或生成密码" />
+      <button class="reveal-button" @click="showPassword = !showPassword">{{ showPassword ? '隐藏' : '显示' }}</button>
+    </view>
+    <view class="strength" v-if="draft.password.length > 0">
+      <view class="strength-track"><view class="strength-fill" :style="strengthStyle"></view></view>
+      <text class="strength-text">安全强度：{{ strengthText }}</text>
+    </view>
+
+    <view class="section-row"><text class="section-title">自定义字段</text><button class="inline-button" @click="addField">添加</button></view>
+    <view class="custom-card" v-for="(field, index) in draft.customFields" :key="field.id">
+      <input class="field half-field" v-model="field.name" placeholder="字段名" />
+      <input class="field half-field" :password="field.secret" v-model="field.value" placeholder="值" />
+      <switch :checked="field.secret" color="#176B4D" @change="toggleSecret(index, $event)" />
+      <button class="remove-button" @click="removeField(index)">移除</button>
+    </view>
+
+    <text class="field-label">标签</text>
+    <input class="field" v-model="draft.tagsText" placeholder="工作, 开发（用逗号分隔）" />
+    <text class="field-label">备注</text>
+    <textarea class="textarea" v-model="draft.notes" placeholder="只保存在加密保险箱内" />
+
+    <text class="error" v-if="error.length > 0">{{ error }}</text>
+    <button class="primary-button save-button" @click="save">保存账户</button>
+    <button class="danger-button delete-button" v-if="id.length > 0" @click="confirmDelete">删除账户</button>
+    <view class="bottom-space"></view>
+  </scroll-view>
+</template>
+
+<script lang="uts">
+import { AccountDraft, CustomField, emptyAccountDraft } from '@/core/domain/models.uts'
+import { SecureRandomProvider, defaultGenerateOptions, generatePassword } from '@/core/generator/password-generator.uts'
+import { evaluatePassword, strengthLabel } from '@/core/strength/password-strength.uts'
+import { validateAccount } from '@/core/validation/account-validation.uts'
+import { accountService } from '../../services/account-service.uts'
+import { vaultService } from '../../services/native-vault.uts'
+import { sessionStore } from '../../stores/session.uts'
+
+class NativeRandomProvider implements SecureRandomProvider {
+  nextBytes(length: number): number[] { return vaultService.randomBytes(length) }
+}
+
+const randomProvider = new NativeRandomProvider()
+
+export default {
+  data() {
+    return { id: '', createdAt: 0, draft: emptyAccountDraft() as AccountDraft, showPassword: false, error: '' }
+  },
+  computed: {
+    strengthText(): string { return strengthLabel(evaluatePassword(this.draft.password).level) },
+    strengthStyle(): string { return `width: ${Math.max(12, evaluatePassword(this.draft.password).score * 25)}%;` }
+  },
+  onLoad(options: UTSJSONObject) {
+    this.id = (options['id'] as string | null) ?? ''
+    if (this.id.length > 0) this.loadAccount()
+  },
+  methods: {
+    loadAccount() {
+      const account = accountService.get(this.id)
+      if (account == null) return
+      this.createdAt = account.createdAt
+      this.draft = {
+        id: account.id,
+        title: account.title,
+        username: account.identity?.username ?? '',
+        email: account.identity?.email ?? '',
+        url: account.urls[0] ?? '',
+        password: account.credentials.password?.value ?? '',
+        notes: account.notes,
+        tagsText: account.tags.join(', '),
+        customFields: account.customFields
+      }
+    },
+    generate() {
+      sessionStore.recordActivity()
+      this.draft.password = generatePassword(defaultGenerateOptions(), randomProvider)
+      this.showPassword = true
+    },
+    addField() {
+      const id = vaultService.randomBytes(8).map((value) => value.toString(16).padStart(2, '0')).join('')
+      this.draft.customFields.push({ id, name: '', value: '', secret: false } as CustomField)
+    },
+    removeField(index: number) { this.draft.customFields.splice(index, 1) },
+    toggleSecret(index: number, event: any) { this.draft.customFields[index].secret = (event as UniSwitchChangeEvent).detail.value },
+    save() {
+      sessionStore.recordActivity()
+      const validation = validateAccount(this.draft)
+      if (!validation.valid) { this.error = validation.message; return }
+      const result = accountService.saveDraft(this.draft, this.createdAt)
+      if (!result.ok) { this.error = result.message; return }
+      uni.navigateBack()
+    },
+    confirmDelete() {
+      uni.showModal({
+        title: '删除账户？',
+        content: '此操作会从加密保险箱中永久删除该账户。',
+        confirmColor: '#A13A37',
+        success: (result) => {
+          if (!result.confirm) return
+          const removed = accountService.remove(this.id)
+          if (removed.ok) uni.navigateBack({ delta: 2 })
+          else this.error = removed.message
+        }
+      })
+    }
+  }
+}
+</script>
+
+<style>
+.password-label, .section-row { margin-top: 18px; flex-direction: row; align-items: center; justify-content: space-between; }
+.label-reset { margin: 0; }
+.inline-button, .remove-button, .reveal-button { margin: 0; height: 34px; padding: 0 11px; border-radius: 8px; color: #176B4D; background-color: #E7F2ED; font-size: 13px; }
+.password-row { margin-top: 7px; flex-direction: row; align-items: center; }
+.password-input { flex: 1; font-family: monospace; }
+.strength { margin-top: 10px; }
+.strength-track { height: 5px; border-radius: 3px; background-color: #E1E6E2; overflow: hidden; }
+.strength-fill { height: 5px; border-radius: 3px; background-color: #176B4D; }
+.strength-text { margin-top: 6px; color: #536159; font-size: 13px; }
+.custom-card { margin-top: 10px; padding: 10px; flex-direction: row; align-items: center; background-color: #FFFFFF; border: 1px solid #E3E8E4; border-radius: 10px; }
+.half-field { flex: 1; height: 42px; padding: 0 9px; margin-right: 7px; }
+.reveal-button { margin-left: 8px; }
+.remove-button { margin-left: 7px; color: #A13A37; background-color: #F9EBEA; }
+.error { margin-top: 14px; color: #A13A37; font-size: 14px; }
+.save-button { margin-top: 20px; }
+.delete-button { margin-top: 10px; }
+.bottom-space { height: 45px; }
+</style>

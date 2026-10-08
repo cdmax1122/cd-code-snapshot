@@ -1,0 +1,107 @@
+<script lang="uts">
+import { sessionStore } from './stores/session.uts'
+
+export default {
+  onLaunch() {
+    sessionStore.startAutoLockMonitor()
+  },
+  onShow() {
+    sessionStore.handleForeground()
+  },
+  onHide() {
+    sessionStore.handleBackground()
+  }
+}
+</script>
+
+<style>
+.page {
+  flex: 1;
+  padding: 24px 20px 36px;
+  background-color: #F7F8F6;
+  color: #17211B;
+  font-size: 16px;
+}
+
+.page-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #17211B;
+}
+
+.subtitle {
+  margin-top: 8px;
+  color: #66716A;
+  font-size: 15px;
+  line-height: 22px;
+}
+
+.card {
+  margin-top: 16px;
+  padding: 18px;
+  background-color: #FFFFFF;
+  border-radius: 14px;
+  border: 1px solid #E3E8E4;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 650;
+  color: #243129;
+}
+
+.field-label {
+  margin-top: 16px;
+  margin-bottom: 7px;
+  color: #536159;
+  font-size: 14px;
+}
+
+.field {
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid #D9E0DB;
+  border-radius: 10px;
+  background-color: #FFFFFF;
+  color: #17211B;
+  font-size: 16px;
+}
+
+.textarea {
+  min-height: 104px;
+  padding: 13px 14px;
+  border: 1px solid #D9E0DB;
+  border-radius: 10px;
+  background-color: #FFFFFF;
+  color: #17211B;
+  font-size: 16px;
+}
+
+.primary-button, .secondary-button, .danger-button {
+  height: 48px;
+  border-radius: 10px;
+  font-size: 16px;
+  align-items: center;
+  justify-content: center;
+}
+
+.primary-button {
+  color: #FFFFFF;
+  background-color: #176B4D;
+}
+
+.secondary-button {
+  color: #176B4D;
+  background-color: #E7F2ED;
+}
+
+.danger-button {
+  color: #A13A37;
+  background-color: #F9EBEA;
+}
+
+.muted {
+  color: #758079;
+  font-size: 14px;
+}
+</style>

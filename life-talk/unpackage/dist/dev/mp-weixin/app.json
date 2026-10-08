@@ -1,0 +1,14 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/scene/detail"
+  ],
+  "subPackages": [],
+  "window": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "Life Talk",
+    "navigationBarBackgroundColor": "#F6EFE6",
+    "backgroundColor": "#F6EFE6"
+  },
+  "usingComponents": {}
+}

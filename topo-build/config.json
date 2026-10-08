@@ -1,0 +1,119 @@
+{
+  "theme": {
+    "background": "#0b1220",
+    "grid": {
+      "enabled": true,
+      "size": 40,
+      "color": "rgba(255,255,255,0.06)"
+    },
+    "node": {
+      "radius": 14,
+      "fill": "rgba(124,92,255,0.18)",
+      "stroke": "rgba(124,92,255,0.9)",
+      "text": "rgba(231,237,248,0.95)",
+      "subtext": "rgba(168,180,202,0.9)",
+      "shadow": "rgba(0,0,0,0.35)"
+    },
+    "edge": {
+      "stroke": "rgba(40,208,183,0.95)",
+      "width": 2,
+      "text": "rgba(231,237,248,0.92)",
+      "arrowSize": 10
+    },
+    "selection": {
+      "stroke": "rgba(255,255,255,0.95)",
+      "glow": "rgba(124,92,255,0.55)"
+    }
+  },
+  "viewport": {
+    "scale": 1,
+    "tx": 200,
+    "ty": 120
+  },
+  "nodes": [
+    {
+      "id": "gw",
+      "label": "Gateway",
+      "subLabel": "Edge",
+      "x": 80,
+      "y": 80,
+      "w": 180,
+      "h": 92,
+      "ports": [
+        { "id": "in", "side": "left", "offset": 0.5, "label": "IN" },
+        { "id": "out", "side": "right", "offset": 0.5, "label": "OUT" }
+      ]
+    },
+    {
+      "id": "svcA",
+      "label": "Service A",
+      "subLabel": "v1.2",
+      "x": 380,
+      "y": 30,
+      "w": 220,
+      "h": 110,
+      "style": { "stroke": "rgba(124,92,255,0.9)", "fill": "rgba(124,92,255,0.14)" },
+      "ports": [
+        { "id": "http", "side": "left", "offset": 0.35, "label": "HTTP" },
+        { "id": "mq", "side": "left", "offset": 0.7, "label": "MQ" },
+        { "id": "out", "side": "right", "offset": 0.5, "label": "OUT" }
+      ]
+    },
+    {
+      "id": "svcB",
+      "label": "Service B",
+      "subLabel": "worker",
+      "x": 380,
+      "y": 190,
+      "w": 220,
+      "h": 110,
+      "style": { "stroke": "rgba(40,208,183,0.95)", "fill": "rgba(40,208,183,0.10)" },
+      "ports": [
+        { "id": "in", "side": "left", "offset": 0.5, "label": "IN" },
+        { "id": "out", "side": "right", "offset": 0.5, "label": "OUT" }
+      ]
+    },
+    {
+      "id": "db",
+      "label": "Database",
+      "subLabel": "Postgres",
+      "x": 700,
+      "y": 100,
+      "w": 220,
+      "h": 140,
+      "style": { "stroke": "rgba(255,255,255,0.6)", "fill": "rgba(255,255,255,0.08)" },
+      "ports": [
+        { "id": "rw", "side": "left", "offset": 0.5, "label": "RW" }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "gw:out",
+      "to": "svcA:http",
+      "label": "REST"
+    },
+    {
+      "id": "e2",
+      "from": "gw:out",
+      "to": "svcB:in",
+      "label": "jobs",
+      "style": { "stroke": "rgba(231,237,248,0.85)", "dash": [6, 6] }
+    },
+    {
+      "id": "e3",
+      "from": "svcA:out",
+      "to": "db:rw",
+      "label": "SQL"
+    },
+    {
+      "id": "e4",
+      "from": "svcB:out",
+      "to": "db:rw",
+      "label": "batch",
+      "style": { "stroke": "rgba(255,77,79,0.85)" }
+    }
+  ]
+}
+

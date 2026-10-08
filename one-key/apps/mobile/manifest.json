@@ -1,0 +1,21 @@
+{
+  "name": "透明本地保险箱",
+  "appid": "__UNI__TRANSPARENT_VAULT",
+  "description": "透明、完全本地的密码与凭证保险箱",
+  "versionName": "0.1.0",
+  "versionCode": 100,
+  "uni-app-x": {},
+  "app": {
+    "distribute": {
+      "android": {
+        "minSdkVersion": 23,
+        "targetSdkVersion": 35,
+        "permissions": []
+      }
+    }
+  },
+  "uniStatistics": {
+    "enable": false
+  }
+}
+

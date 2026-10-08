@@ -1,0 +1,70 @@
+[
+  {
+    "id": "commute",
+    "name": "通勤出行",
+    "icon": "🚌",
+    "description": "地铁、打车、问路时常用表达",
+    "words": [
+      { "en": "station", "zh": "车站" },
+      { "en": "ticket", "zh": "车票" },
+      { "en": "transfer", "zh": "换乘" },
+      { "en": "destination", "zh": "目的地" }
+    ],
+    "phrases": [
+      { "en": "Which line should I take?", "zh": "我该坐哪条线？" },
+      { "en": "How many stops are left?", "zh": "还有几站？" },
+      { "en": "Please drop me off here.", "zh": "请在这里让我下车。" }
+    ]
+  },
+  {
+    "id": "cafe",
+    "name": "咖啡点单",
+    "icon": "☕",
+    "description": "在咖啡店点单和沟通偏好",
+    "words": [
+      { "en": "latte", "zh": "拿铁" },
+      { "en": "size", "zh": "杯型" },
+      { "en": "iced", "zh": "加冰的" },
+      { "en": "oat milk", "zh": "燕麦奶" }
+    ],
+    "phrases": [
+      { "en": "I'd like a medium latte.", "zh": "我想要一杯中杯拿铁。" },
+      { "en": "Can I get it with oat milk?", "zh": "可以换成燕麦奶吗？" },
+      { "en": "For here or to go?", "zh": "店内用还是带走？" }
+    ]
+  },
+  {
+    "id": "shopping",
+    "name": "日常购物",
+    "icon": "🛍️",
+    "description": "逛超市、买日用品时的表达",
+    "words": [
+      { "en": "receipt", "zh": "小票" },
+      { "en": "discount", "zh": "折扣" },
+      { "en": "cashier", "zh": "收银员" },
+      { "en": "bag", "zh": "购物袋" }
+    ],
+    "phrases": [
+      { "en": "Is this on sale today?", "zh": "这个今天打折吗？" },
+      { "en": "Can I pay by card?", "zh": "我可以刷卡吗？" },
+      { "en": "Please give me a small bag.", "zh": "请给我一个小袋子。" }
+    ]
+  },
+  {
+    "id": "family-dinner",
+    "name": "家庭聚餐",
+    "icon": "🍲",
+    "description": "邀请、就座、分享口味时使用",
+    "words": [
+      { "en": "spoon", "zh": "勺子" },
+      { "en": "plate", "zh": "盘子" },
+      { "en": "spicy", "zh": "辣的" },
+      { "en": "dessert", "zh": "甜点" }
+    ],
+    "phrases": [
+      { "en": "Help yourself to some food.", "zh": "请随意夹菜。" },
+      { "en": "This dish is my favorite.", "zh": "这道菜是我的最爱。" },
+      { "en": "Would you like some dessert?", "zh": "你想来点甜点吗？" }
+    ]
+  }
+]

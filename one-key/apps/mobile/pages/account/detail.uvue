@@ -1,0 +1,110 @@
+<template>
+  <scroll-view class="page" scroll-y="true" v-if="account != null">
+    <view class="detail-header">
+      <view class="avatar"><text class="avatar-text">{{ initial }}</text></view>
+      <view class="header-main"><text class="page-title">{{ account.title }}</text><text class="subtitle">{{ domain }}</text></view>
+      <button class="edit-button" @click="edit">编辑</button>
+    </view>
+
+    <view class="card">
+      <text class="section-title">身份信息</text>
+      <view class="value-row" v-if="username.length > 0">
+        <view class="value-main"><text class="muted">用户名</text><text class="value">{{ username }}</text></view>
+        <button class="text-button" @click="copyText(username)">复制</button>
+      </view>
+      <view class="value-row" v-if="email.length > 0">
+        <view class="value-main"><text class="muted">邮箱</text><text class="value">{{ email }}</text></view>
+        <button class="text-button" @click="copyText(email)">复制</button>
+      </view>
+      <view class="value-row">
+        <view class="value-main"><text class="muted">密码</text><text class="value password-value">{{ showPassword ? password : mask }}</text></view>
+        <button class="text-button" @click="showPassword = !showPassword">{{ showPassword ? '隐藏' : '显示' }}</button>
+        <button class="copy-button" @click="copyPassword">复制</button>
+      </view>
+    </view>
+
+    <view class="card">
+      <text class="section-title">登录凭证</text>
+      <view class="credential-row"><text>Password</text><text class="status-on">{{ password.length > 0 ? '已配置' : '未配置' }}</text></view>
+      <view class="credential-row"><text>Passkey</text><text class="muted">暂未配置 · 已预留</text></view>
+    </view>
+
+    <view class="card" v-if="account.customFields.length > 0">
+      <text class="section-title">自定义字段</text>
+      <view class="value-row" v-for="field in account.customFields" :key="field.id">
+        <view class="value-main"><text class="muted">{{ field.name }}</text><text class="value">{{ field.secret ? '••••••••' : field.value }}</text></view>
+        <button class="text-button" @click="copyText(field.value)">复制</button>
+      </view>
+    </view>
+
+    <view class="card" v-if="account.notes.length > 0"><text class="section-title">备注</text><text class="notes">{{ account.notes }}</text></view>
+    <view class="card" v-if="account.tags.length > 0"><text class="section-title">标签</text><text class="notes">{{ account.tags.join(' · ') }}</text></view>
+    <view class="bottom-space"></view>
+  </scroll-view>
+</template>
+
+<script lang="uts">
+import { AccountEntry } from '@/core/domain/models.uts'
+import { accountService } from '../../services/account-service.uts'
+import { vaultService } from '../../services/native-vault.uts'
+import { sessionStore } from '../../stores/session.uts'
+
+export default {
+  data() {
+    return { id: '', account: null as AccountEntry | null, showPassword: false }
+  },
+  computed: {
+    initial(): string { return this.account?.title.substring(0, 1).toUpperCase() ?? '?' },
+    domain(): string { return this.account?.urls[0]?.replace('https://', '').replace('http://', '').split('/')[0] ?? '本地账户' },
+    username(): string { return this.account?.identity?.username ?? '' },
+    email(): string { return this.account?.identity?.email ?? '' },
+    password(): string { return this.account?.credentials.password?.value ?? '' },
+    mask(): string { return this.password.length > 0 ? '••••••••••••' : '未配置' }
+  },
+  onLoad(options: UTSJSONObject) {
+    this.id = options['id'] as string
+  },
+  onShow() {
+    if (!vaultService.unlocked()) {
+      uni.reLaunch({ url: '/pages/unlock/index' })
+      return
+    }
+    sessionStore.recordActivity()
+    this.account = accountService.get(this.id)
+    if (this.account == null) uni.navigateBack()
+  },
+  methods: {
+    edit() { uni.navigateTo({ url: `/pages/account/edit?id=${encodeURIComponent(this.id)}` }) },
+    copyText(value: string) {
+      sessionStore.recordActivity()
+      uni.setClipboardData({ data: value, showToast: false, success: () => uni.showToast({ title: '已复制', icon: 'none' }) })
+    },
+    copyPassword() {
+      if (this.password.length === 0) return
+      const seconds = vaultService.settings().clipboardClearSeconds
+      vaultService.copyPassword(this.password, seconds)
+      uni.showToast({ title: seconds > 0 ? `${seconds} 秒后清除` : '已复制', icon: 'none' })
+    }
+  }
+}
+</script>
+
+<style>
+.detail-header { margin-top: 10px; flex-direction: row; align-items: center; }
+.avatar { width: 56px; height: 56px; border-radius: 16px; background-color: #E7F2ED; align-items: center; justify-content: center; }
+.avatar-text { color: #176B4D; font-size: 22px; font-weight: 700; }
+.header-main { flex: 1; margin-left: 14px; }
+.edit-button, .text-button, .copy-button { margin: 0; height: 36px; padding: 0 12px; border-radius: 8px; font-size: 13px; }
+.edit-button, .text-button { color: #176B4D; background-color: #E7F2ED; }
+.copy-button { margin-left: 6px; color: #FFFFFF; background-color: #176B4D; }
+.value-row { min-height: 64px; flex-direction: row; align-items: center; border-bottom: 1px solid #EDF0ED; }
+.value-row:last-child { border-bottom: none; }
+.value-main { flex: 1; }
+.value { margin-top: 4px; color: #26332B; font-size: 15px; }
+.password-value { font-family: monospace; }
+.credential-row { height: 52px; flex-direction: row; align-items: center; justify-content: space-between; border-bottom: 1px solid #EDF0ED; }
+.credential-row:last-child { border-bottom: none; }
+.status-on { color: #176B4D; font-size: 14px; }
+.notes { margin-top: 12px; color: #445249; font-size: 15px; line-height: 22px; }
+.bottom-space { height: 40px; }
+</style>

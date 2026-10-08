@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>TopoBuilder - Canvas 可配置拓扑图</title>
+    <link rel="stylesheet" href="./topo.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="header">
+        <div class="brand">
+          <div class="title">TopoBuilder</div>
+          <div class="subtitle">基于 HTML Canvas 的可配置拓扑图</div>
+        </div>
+        <div class="actions">
+          <button id="btnFit" class="btn">适配视图</button>
+          <button id="btnCenter" class="btn">居中</button>
+          <button id="btnReset" class="btn btnPrimary">重置</button>
+        </div>
+      </header>
+
+      <main class="main">
+        <section class="stage">
+          <div class="canvasWrap">
+            <canvas id="topo" aria-label="topology canvas"></canvas>
+            <div class="hint">
+              <div><b>操作</b></div>
+              <div>滚轮缩放，按住空格拖拽平移，拖拽节点移动</div>
+              <div>单击选中，Shift+单击多选，Esc 清空选择</div>
+            </div>
+          </div>
+          <div class="status" id="status"></div>
+        </section>
+
+        <aside class="panel">
+          <div class="panelHeader">
+            <div class="panelTitle">配置（JSON）</div>
+            <div class="panelActions">
+              <input id="fileConfig" type="file" accept="application/json,.json" hidden />
+              <button id="btnLoadConfig" class="btn">加载文件/示例</button>
+              <button id="btnApply" class="btn btnPrimary">应用配置</button>
+            </div>
+          </div>
+
+          <div class="panelBody">
+            <textarea id="configText" spellcheck="false"></textarea>
+            <div class="panelHelp">
+              <div class="helpTitle">配置要点</div>
+              <ul>
+                <li><b>nodes</b>：节点数组，包含 <code>id</code>、<code>label</code>、<code>x</code>、<code>y</code>、<code>w</code>、<code>h</code>、<code>style</code></li>
+                <li><b>edges</b>：连线数组，包含 <code>id</code>、<code>from</code>、<code>to</code>、<code>label</code>、<code>style</code></li>
+                <li><b>viewport</b>：初始视图 <code>scale</code>、<code>tx</code>、<code>ty</code></li>
+                <li><b>theme</b>：全局样式与网格</li>
+              </ul>
+              <div class="helpFoot">提示：改完 JSON 点“应用配置”。连线端点可用 <code>nodeId</code> 或 <code>nodeId:portId</code>。</div>
+            </div>
+          </div>
+        </aside>
+      </main>
+    </div>
+
+    <script type="module" src="./topo.js"></script>
+  </body>
+</html>

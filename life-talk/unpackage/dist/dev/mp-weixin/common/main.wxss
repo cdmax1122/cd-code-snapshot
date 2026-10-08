@@ -1,0 +1,43 @@
+:root {
+  --lt-bg: #f6efe6;
+  --lt-surface: #fffaf3;
+  --lt-surface-strong: #f2e5d5;
+  --lt-primary: #d36b2c;
+  --lt-primary-deep: #8f3f16;
+  --lt-accent: #2f6f62;
+  --lt-text-primary: #2b221d;
+  --lt-text-secondary: #76665a;
+  --lt-border: rgba(143, 63, 22, 0.12);
+  --lt-shadow: 0 16rpx 40rpx rgba(71, 43, 24, 0.08);
+  --lt-radius-lg: 28rpx;
+  --lt-radius-md: 20rpx;
+  --lt-radius-sm: 14rpx;
+}
+:root {
+  --lt-bg: #f6efe6;
+  --lt-surface: #fffaf3;
+  --lt-surface-strong: #f2e5d5;
+  --lt-primary: #d36b2c;
+  --lt-primary-deep: #8f3f16;
+  --lt-accent: #2f6f62;
+  --lt-text-primary: #2b221d;
+  --lt-text-secondary: #76665a;
+  --lt-border: rgba(143, 63, 22, 0.12);
+  --lt-shadow: 0 16rpx 40rpx rgba(71, 43, 24, 0.08);
+  --lt-radius-lg: 28rpx;
+  --lt-radius-md: 20rpx;
+  --lt-radius-sm: 14rpx;
+}
+page {
+  background: var(--lt-bg);
+  color: var(--lt-text-primary);
+  font-family: "Trebuchet MS", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+view,
+text,
+button {
+  box-sizing: border-box;
+}
+button::after {
+  border: none;
+}

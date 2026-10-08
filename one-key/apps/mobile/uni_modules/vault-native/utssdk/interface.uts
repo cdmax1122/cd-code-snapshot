@@ -1,0 +1,21 @@
+export type NativeResult = {
+  ok: boolean
+  message: string
+}
+
+export type HasVault = () => boolean
+export type VaultPath = () => string
+export type CreateVault = (masterPassword: string) => string
+export type UnlockVault = (masterPassword: string) => string
+export type LockVault = () => void
+export type IsUnlocked = () => boolean
+export type ListAccounts = () => string
+export type GetAccount = (id: string) => string
+export type SaveAccount = (accountJson: string) => string
+export type DeleteAccount = (id: string) => string
+export type GetSettings = () => string
+export type SaveSettings = (settingsJson: string) => string
+export type BackupVault = () => string
+export type SecureRandomBytes = (length: number) => number[]
+export type CopySensitive = (value: string, clearSeconds: number) => void
+

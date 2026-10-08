@@ -1,0 +1,74 @@
+<template>
+  <scroll-view class="page" scroll-y="true">
+    <text class="page-title">安全状态</text>
+    <text class="subtitle">重要行为在这里可见，而不是藏在高级设置里。</text>
+
+    <view class="status-card">
+      <view class="status-row"><text class="status-check">✓</text><text>密码只保存在本设备</text></view>
+      <view class="status-row"><text class="status-check">✓</text><text>未启用任何云同步</text></view>
+      <view class="status-row"><text class="status-check">✓</text><text>保险箱已整体加密</text></view>
+      <view class="status-row"><text class="status-check">✓</text><text>{{ clipboardText }}</text></view>
+      <view class="status-row"><text class="status-check">✓</text><text>{{ settings.autoLockSeconds / 60 }} 分钟无操作自动锁定</text></view>
+    </view>
+
+    <view class="card">
+      <text class="section-title">数据位置</text>
+      <text class="path">{{ path }}</text>
+      <text class="muted path-note">账户名称、用户名、密码、标签和备注都位于加密 Payload 内。</text>
+    </view>
+
+    <view class="card">
+      <text class="section-title">安全实现</text>
+      <view class="detail-row"><text class="muted">主密码派生</text><text>PBKDF2-HMAC-SHA256</text></view>
+      <view class="detail-row"><text class="muted">保险箱加密</text><text>AES-256-GCM (AEAD)</text></view>
+      <view class="detail-row"><text class="muted">密码生成</text><text>系统安全随机数</text></view>
+      <view class="detail-row"><text class="muted">密码数据网络请求</text><text class="zero">0</text></view>
+      <view class="detail-row"><text class="muted">保险箱格式</text><text>v1</text></view>
+    </view>
+
+    <view class="card">
+      <text class="section-title">应用</text>
+      <view class="detail-row"><text class="muted">版本</text><text>0.1.0</text></view>
+      <view class="detail-row"><text class="muted">Build</text><text>development</text></view>
+      <view class="detail-row"><text class="muted">分析与遥测</text><text>关闭</text></view>
+    </view>
+
+    <view class="notice"><text class="notice-title">能力边界</text><text class="notice-text">本产品不能防御已完全控制设备的恶意程序、恶意输入法、键盘记录或主动泄露。Root 设备会显著削弱本地保护。</text></view>
+    <view class="bottom-space"></view>
+  </scroll-view>
+</template>
+
+<script lang="uts">
+import { VaultSettings } from '@/core/domain/models.uts'
+import { vaultService } from '../../services/native-vault.uts'
+
+export default {
+  data() {
+    return {
+      path: vaultService.path(),
+      settings: { autoLockSeconds: 300, clipboardClearSeconds: 30, biometricUnlockEnabled: false } as VaultSettings
+    }
+  },
+  computed: {
+    clipboardText(): string {
+      return this.settings.clipboardClearSeconds > 0 ? `${this.settings.clipboardClearSeconds} 秒后清理密码剪贴板` : '密码剪贴板自动清理已关闭'
+    }
+  },
+  onShow() { this.settings = vaultService.settings() }
+}
+</script>
+
+<style>
+.status-card { margin-top: 20px; padding: 18px; border-radius: 14px; background-color: #E7F2ED; }
+.status-row { min-height: 42px; flex-direction: row; align-items: center; color: #284638; }
+.status-check { width: 28px; color: #176B4D; font-weight: 700; }
+.path { margin-top: 12px; color: #344239; font-size: 13px; line-height: 19px; }
+.path-note { margin-top: 10px; line-height: 20px; }
+.detail-row { min-height: 48px; flex-direction: row; align-items: center; justify-content: space-between; border-bottom: 1px solid #EDF0ED; }
+.detail-row:last-child { border-bottom: none; }
+.zero { color: #176B4D; font-weight: 700; }
+.notice { margin-top: 16px; padding: 16px; border-radius: 12px; background-color: #F7EFE4; }
+.notice-title { color: #735733; font-weight: 650; }
+.notice-text { margin-top: 8px; color: #725F47; font-size: 14px; line-height: 21px; }
+.bottom-space { height: 40px; }
+</style>

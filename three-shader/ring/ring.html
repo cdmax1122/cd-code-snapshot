@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>圆环扩散</title>
+</head>
+<body>
+    <script type="module">
+        import * as THREE from "https://unpkg.com/three@0.169.0/build/three.module.js";
+
+        const config = {
+            width: 700,
+            height: 400
+        }
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, config.width / config.height, 0.1, 100);
+        camera.position.set(0, 0, 15);
+
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(config.width, config.height);
+        document.body.appendChild(renderer.domElement);
+
+        const geometry = new THREE.PlaneGeometry(5, 5);
+        const material = new THREE.ShaderMaterial({
+            vertexShader: `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                varying vec2 vUv;
+                uniform float uTime;
+                void main() {
+                    // 圆心
+                    vec2 center = vec2(0.5);
+                    // 每个像素到圆心的距离
+                    float dist = distance(vUv, center);
+                    // 圆环宽度
+                    float thickness = 0.05;
+                    // 固定：包含圆环的半径 0-0.5
+                    // float outerRadius = 0.5;
+                    // 线性圆环
+                    // float outerRadius = (sin(uTime) * 0.5 + 0.5) * 0.5;
+                    // 周期性圆环
+                    float outerRadius = fract(uTime) * 0.5;
+                    // 圆环颜色
+                    vec3 ringColor = vec3(1.0, 0.0, 0.0);
+                    // 比较距离和半径，处理透明度
+                    float alpha = 0.0;
+                    if (dist < outerRadius && dist > outerRadius - thickness) {
+                        alpha = 1.0;
+                    } else {
+                        // 丢弃像素(推荐，相对性能更好，因为直接跳过后续混合等管线流程)
+                        // 或者开启transparent: true
+                        discard; 
+                    }
+                    // 输出颜色
+                    gl_FragColor = vec4(ringColor, alpha);
+                }
+            `,
+            uniforms: {
+                uTime: { value: 0.0}
+            },
+        });
+        scene.add(new THREE.Mesh(geometry, material));
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            material.uniforms.uTime.value += 0.01;
+            renderer.render(scene, camera);
+        }
+        animate();
+    </script>
+</body>
+</html>

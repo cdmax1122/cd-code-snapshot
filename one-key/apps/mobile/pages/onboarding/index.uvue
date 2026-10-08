@@ -1,0 +1,85 @@
+<template>
+  <scroll-view class="page" scroll-y="true">
+    <view class="top-space"></view>
+    <text class="eyebrow">TRANSPARENT FIRST</text>
+    <text class="page-title">你的密码，只在你看得见的地方。</text>
+    <text class="subtitle">无需注册，不依赖云端。账户与密码将加密保存在这台设备的私有目录中。</text>
+
+    <view class="card promise-card">
+      <view class="promise-row"><text class="check">✓</text><text class="promise-text">密码数据网络请求为 0</text></view>
+      <view class="promise-row"><text class="check">✓</text><text class="promise-text">单一加密文件，位置清晰可见</text></view>
+      <view class="promise-row"><text class="check">✓</text><text class="promise-text">主密码不会被保存</text></view>
+    </view>
+
+    <text class="field-label">设置主密码</text>
+    <input class="field" password="true" v-model="password" placeholder="至少 12 个字符" />
+    <text class="field-label">确认主密码</text>
+    <input class="field" password="true" v-model="confirmPassword" placeholder="再次输入" />
+    <text class="helper">主密码无法找回。建议使用容易记住的长密码短语，并妥善备份保险箱文件。</text>
+
+    <button class="primary-button create-button" :disabled="submitting" @click="create">{{ submitting ? '正在创建…' : '创建本地保险箱' }}</button>
+    <text class="error" v-if="error.length > 0">{{ error }}</text>
+
+    <view class="location">
+      <text class="muted">保存位置</text>
+      <text class="path">{{ path }}</text>
+    </view>
+  </scroll-view>
+</template>
+
+<script lang="uts">
+import { vaultService } from '../../services/native-vault.uts'
+import { sessionStore } from '../../stores/session.uts'
+
+export default {
+  data() {
+    return {
+      password: '',
+      confirmPassword: '',
+      error: '',
+      submitting: false,
+      path: vaultService.path()
+    }
+  },
+  methods: {
+    create() {
+      sessionStore.recordActivity()
+      this.error = ''
+      if (this.password.length < 12) {
+        this.error = '主密码至少需要 12 个字符'
+        return
+      }
+      if (this.password !== this.confirmPassword) {
+        this.error = '两次输入的主密码不一致'
+        return
+      }
+      this.submitting = true
+      const result = vaultService.create(this.password)
+      this.password = ''
+      this.confirmPassword = ''
+      this.submitting = false
+      if (!result.ok) {
+        this.error = result.message
+        return
+      }
+      sessionStore.refreshSettings()
+      uni.reLaunch({ url: '/pages/vault/index' })
+    }
+  }
+}
+</script>
+
+<style>
+.top-space { height: 38px; }
+.eyebrow { color: #176B4D; font-size: 12px; font-weight: 700; letter-spacing: 1px; margin-bottom: 12px; }
+.promise-card { margin-top: 24px; }
+.promise-row { flex-direction: row; align-items: center; margin-bottom: 12px; }
+.promise-row:last-child { margin-bottom: 0; }
+.check { width: 26px; color: #176B4D; font-weight: 700; }
+.promise-text { color: #344239; font-size: 15px; }
+.helper { margin-top: 10px; color: #758079; font-size: 13px; line-height: 19px; }
+.create-button { margin-top: 24px; }
+.error { margin-top: 10px; color: #A13A37; font-size: 14px; }
+.location { margin-top: 24px; margin-bottom: 30px; }
+.path { margin-top: 5px; color: #445249; font-size: 12px; }
+</style>

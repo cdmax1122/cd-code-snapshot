@@ -1,0 +1,89 @@
+<template>
+  <scroll-view class="page" scroll-y="true">
+    <text class="page-title">设置</text>
+    <text class="subtitle">控制锁定、剪贴板与本地加密备份。</text>
+
+    <view class="card">
+      <text class="section-title">自动锁定</text>
+      <picker :range="lockLabels" :value="lockIndex" @change="lockChanged">
+        <view class="picker-row"><text class="muted">无操作后</text><text>{{ lockLabels[lockIndex] }}  ›</text></view>
+      </picker>
+      <text class="muted note">应用进入后台超过 30 秒时也会要求重新解锁。</text>
+    </view>
+
+    <view class="card">
+      <text class="section-title">剪贴板清理</text>
+      <picker :range="clipboardLabels" :value="clipboardIndex" @change="clipboardChanged">
+        <view class="picker-row"><text class="muted">复制密码后</text><text>{{ clipboardLabels[clipboardIndex] }}  ›</text></view>
+      </picker>
+      <text class="muted note">仅当剪贴板仍是本应用写入的密码时才清除。</text>
+    </view>
+
+    <view class="card">
+      <text class="section-title">本地备份</text>
+      <text class="muted note">备份是原始加密保险箱的副本，不会导出明文 JSON。</text>
+      <button class="secondary-button backup-button" @click="backup">立即创建加密备份</button>
+      <text class="backup-path" v-if="backupPath.length > 0">{{ backupPath }}</text>
+    </view>
+
+    <view class="card">
+      <text class="section-title">保险箱</text>
+      <text class="path">{{ path }}</text>
+      <button class="danger-button lock-button" @click="lock">立即锁定</button>
+    </view>
+
+    <view class="card"><text class="section-title">关于</text><view class="picker-row"><text class="muted">版本</text><text>0.1.0</text></view><view class="picker-row"><text class="muted">云同步</text><text>无</text></view></view>
+    <view class="bottom-space"></view>
+  </scroll-view>
+</template>
+
+<script lang="uts">
+import { VaultSettings } from '@/core/domain/models.uts'
+import { vaultService } from '../../services/native-vault.uts'
+import { sessionStore } from '../../stores/session.uts'
+
+export default {
+  data() {
+    return {
+      settings: { autoLockSeconds: 300, clipboardClearSeconds: 30, biometricUnlockEnabled: false } as VaultSettings,
+      lockValues: [60, 300, 900, 3600],
+      lockLabels: ['1 分钟', '5 分钟', '15 分钟', '1 小时'],
+      clipboardValues: [15, 30, 60, 0],
+      clipboardLabels: ['15 秒', '30 秒', '60 秒', '不自动清除'],
+      lockIndex: 1,
+      clipboardIndex: 1,
+      path: vaultService.path(),
+      backupPath: ''
+    }
+  },
+  onShow() {
+    this.settings = vaultService.settings()
+    this.lockIndex = Math.max(0, this.lockValues.indexOf(this.settings.autoLockSeconds))
+    this.clipboardIndex = Math.max(0, this.clipboardValues.indexOf(this.settings.clipboardClearSeconds))
+  },
+  methods: {
+    lockChanged(event: UniPickerChangeEvent) { this.lockIndex = parseInt(event.detail.value as string); this.settings.autoLockSeconds = this.lockValues[this.lockIndex]; this.persist() },
+    clipboardChanged(event: UniPickerChangeEvent) { this.clipboardIndex = parseInt(event.detail.value as string); this.settings.clipboardClearSeconds = this.clipboardValues[this.clipboardIndex]; this.persist() },
+    persist() {
+      const result = vaultService.updateSettings(this.settings)
+      if (result.ok) { sessionStore.refreshSettings(); uni.showToast({ title: '已保存', icon: 'none' }) }
+      else uni.showToast({ title: result.message, icon: 'none' })
+    },
+    backup() {
+      sessionStore.recordActivity()
+      const result = vaultService.backup()
+      if (result.ok) { this.backupPath = result.message; uni.showToast({ title: '备份已创建', icon: 'none' }) }
+      else uni.showToast({ title: result.message, icon: 'none' })
+    },
+    lock() { sessionStore.lockAndReturn() }
+  }
+}
+</script>
+
+<style>
+.picker-row { min-height: 52px; flex-direction: row; align-items: center; justify-content: space-between; border-bottom: 1px solid #EDF0ED; }
+.note { margin-top: 10px; line-height: 20px; }
+.backup-button, .lock-button { margin-top: 16px; }
+.backup-path, .path { margin-top: 12px; color: #536159; font-size: 12px; line-height: 18px; }
+.bottom-space { height: 40px; }
+</style>

@@ -1,0 +1,56 @@
+<template>
+  <view class="page unlock-page">
+    <view class="unlock-content">
+      <view class="mark"><text class="mark-text">钥</text></view>
+      <text class="page-title unlock-title">解锁保险箱</text>
+      <text class="subtitle">数据只从本机加密文件读取，不会发送到网络。</text>
+      <input class="field password-field" password="true" v-model="password" placeholder="主密码" confirm-type="done" @confirm="unlock" />
+      <button class="primary-button" :disabled="submitting" @click="unlock">{{ submitting ? '正在解锁…' : '解锁' }}</button>
+      <text class="error" v-if="error.length > 0">{{ error }}</text>
+    </view>
+    <view class="file-note">
+      <text class="muted">本地保险箱</text>
+      <text class="path">{{ path }}</text>
+    </view>
+  </view>
+</template>
+
+<script lang="uts">
+import { vaultService } from '../../services/native-vault.uts'
+import { sessionStore } from '../../stores/session.uts'
+
+export default {
+  data() {
+    return { password: '', error: '', submitting: false, path: vaultService.path() }
+  },
+  methods: {
+    unlock() {
+      sessionStore.recordActivity()
+      if (this.password.length === 0 || this.submitting) return
+      this.submitting = true
+      this.error = ''
+      const result = vaultService.unlock(this.password)
+      this.password = ''
+      this.submitting = false
+      if (!result.ok) {
+        this.error = result.message
+        return
+      }
+      sessionStore.refreshSettings()
+      uni.reLaunch({ url: '/pages/vault/index' })
+    }
+  }
+}
+</script>
+
+<style>
+.unlock-page { justify-content: space-between; }
+.unlock-content { margin-top: 96px; }
+.mark { width: 52px; height: 52px; border-radius: 15px; background-color: #176B4D; align-items: center; justify-content: center; }
+.mark-text { color: #FFFFFF; font-size: 23px; font-weight: 700; }
+.unlock-title { margin-top: 22px; }
+.password-field { margin-top: 28px; margin-bottom: 14px; }
+.error { margin-top: 12px; color: #A13A37; font-size: 14px; }
+.file-note { margin-bottom: 16px; }
+.path { margin-top: 5px; color: #536159; font-size: 12px; }
+</style>

@@ -1,0 +1,103 @@
+<template>
+  <scroll-view class="page" scroll-y="true">
+    <text class="page-title">密码生成器</text>
+    <text class="subtitle">所有随机数来自 Android 操作系统，不使用网络。</text>
+
+    <view class="password-card">
+      <text class="generated">{{ password }}</text>
+      <view class="strength-line"><text class="strength-label">{{ strengthText }}</text><text class="muted">随机生成 · {{ generatorOptions.length }} 位 · 约 {{ entropy }} bits</text></view>
+      <view class="button-row"><button class="secondary-button half" @click="regenerate">重新生成</button><button class="primary-button half" @click="copy">复制密码</button></view>
+    </view>
+
+    <view class="card">
+      <view class="setting-row"><text class="section-title">密码长度</text><text class="length">{{ generatorOptions.length }}</text></view>
+      <slider :value="generatorOptions.length" min="8" max="64" step="1" activeColor="#176B4D" backgroundColor="#DDE4DF" @change="lengthChanged" />
+      <text class="section-title group-title">字符类型</text>
+      <view class="setting-row"><text>大写字母 A–Z</text><switch :checked="generatorOptions.uppercase" color="#176B4D" @change="setUppercase" /></view>
+      <view class="setting-row"><text>小写字母 a–z</text><switch :checked="generatorOptions.lowercase" color="#176B4D" @change="setLowercase" /></view>
+      <view class="setting-row"><text>数字 0–9</text><switch :checked="generatorOptions.numbers" color="#176B4D" @change="setNumbers" /></view>
+      <view class="setting-row"><text>符号</text><switch :checked="generatorOptions.symbols" color="#176B4D" @change="setSymbols" /></view>
+    </view>
+
+    <view class="card">
+      <text class="section-title">高级设置</text>
+      <view class="setting-row"><view><text>排除相似字符</text><text class="muted option-note">O / 0 / I / l / 1</text></view><switch :checked="generatorOptions.excludeSimilar" color="#176B4D" @change="setExcludeSimilar" /></view>
+      <view class="setting-row"><view><text>每类至少一个字符</text><text class="muted option-note">避免所选字符类型缺失</text></view><switch :checked="generatorOptions.requireEachType" color="#176B4D" @change="setRequireEach" /></view>
+      <text class="field-label">允许的符号</text>
+      <input class="field symbols" v-model="generatorOptions.customSymbols" @blur="regenerate" />
+    </view>
+
+    <view class="card transparent-card">
+      <text class="section-title">安全详情</text>
+      <view class="detail-row"><text class="muted">随机来源</text><text>操作系统 SecureRandom</text></view>
+      <view class="detail-row"><text class="muted">网络请求</text><text>无</text></view>
+      <view class="detail-row"><text class="muted">强度估算</text><text>基于已知随机来源</text></view>
+    </view>
+    <view class="bottom-space"></view>
+  </scroll-view>
+</template>
+
+<script lang="uts">
+import { PasswordGenerateOptions, SecureRandomProvider, defaultGenerateOptions, generatePassword, generatedEntropyBits } from '@/core/generator/password-generator.uts'
+import { evaluatePassword, strengthLabel } from '@/core/strength/password-strength.uts'
+import { vaultService } from '../../services/native-vault.uts'
+import { sessionStore } from '../../stores/session.uts'
+
+class NativeRandomProvider implements SecureRandomProvider {
+  nextBytes(length: number): number[] { return vaultService.randomBytes(length) }
+}
+
+const randomProvider = new NativeRandomProvider()
+
+export default {
+  data() {
+    return { generatorOptions: defaultGenerateOptions() as PasswordGenerateOptions, password: '' }
+  },
+  computed: {
+    strengthText(): string { return strengthLabel(evaluatePassword(this.password).level) },
+    entropy(): number { return generatedEntropyBits(this.generatorOptions) }
+  },
+  onLoad() { this.regenerate() },
+  methods: {
+    regenerate() {
+      sessionStore.recordActivity()
+      try {
+        this.password = generatePassword(this.generatorOptions, randomProvider)
+      } catch (error) {
+        uni.showToast({ title: `${error}`, icon: 'none' })
+      }
+    },
+    copy() {
+      const seconds = vaultService.settings().clipboardClearSeconds
+      vaultService.copyPassword(this.password, seconds)
+      uni.showToast({ title: seconds > 0 ? `${seconds} 秒后清除` : '已复制', icon: 'none' })
+    },
+    lengthChanged(event: UniSliderChangeEvent) { this.generatorOptions.length = event.detail.value; this.regenerate() },
+    setUppercase(event: UniSwitchChangeEvent) { this.generatorOptions.uppercase = event.detail.value; this.regenerate() },
+    setLowercase(event: UniSwitchChangeEvent) { this.generatorOptions.lowercase = event.detail.value; this.regenerate() },
+    setNumbers(event: UniSwitchChangeEvent) { this.generatorOptions.numbers = event.detail.value; this.regenerate() },
+    setSymbols(event: UniSwitchChangeEvent) { this.generatorOptions.symbols = event.detail.value; this.regenerate() },
+    setExcludeSimilar(event: UniSwitchChangeEvent) { this.generatorOptions.excludeSimilar = event.detail.value; this.regenerate() },
+    setRequireEach(event: UniSwitchChangeEvent) { this.generatorOptions.requireEachType = event.detail.value; this.regenerate() }
+  }
+}
+</script>
+
+<style>
+.password-card { margin-top: 20px; padding: 20px; border-radius: 14px; background-color: #173D30; }
+.generated { color: #FFFFFF; font-size: 19px; font-family: monospace; line-height: 28px; }
+.strength-line { margin-top: 16px; flex-direction: row; justify-content: space-between; align-items: center; }
+.strength-label { color: #86D3B3; font-size: 15px; font-weight: 650; }
+.button-row { margin-top: 18px; flex-direction: row; }
+.half { flex: 1; }
+.half + .half { margin-left: 10px; }
+.setting-row { min-height: 54px; flex-direction: row; align-items: center; justify-content: space-between; border-bottom: 1px solid #EDF0ED; }
+.setting-row:last-child { border-bottom: 0; }
+.length { color: #176B4D; font-size: 20px; font-weight: 700; }
+.group-title { margin-top: 18px; }
+.option-note { margin-top: 4px; }
+.symbols { margin-top: 7px; font-family: monospace; }
+.detail-row { margin-top: 14px; flex-direction: row; justify-content: space-between; }
+.transparent-card { background-color: #F0F5F2; }
+.bottom-space { height: 40px; }
+</style>

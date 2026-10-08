@@ -1,0 +1,16 @@
+{
+  "name": "topo-spark",
+  "version": "0.1.0",
+  "description": "A data-driven topology graph rendering engine with energy-storage demo.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@vitejs/plugin-legacy": "latest",
+    "vite": "latest"
+  },
+  "devDependencies": {}
+}

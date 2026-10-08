@@ -1,0 +1,11 @@
+{
+  "id": "vault-native",
+  "displayName": "透明保险箱 Android 安全核心",
+  "version": "0.1.0",
+  "description": "本地保险箱加密、文件、备份、安全随机数与剪贴板边界",
+  "uni_modules": {},
+  "dcloudext": {
+    "type": "uts"
+  }
+}
+

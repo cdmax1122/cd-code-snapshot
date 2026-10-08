@@ -1,0 +1,72 @@
+import { UTSAndroid } from 'io.dcloud.uts'
+import { VaultNativeEngine } from 'uts.sdk.modules.vaultNative'
+import {
+  HasVault, VaultPath, CreateVault, UnlockVault, LockVault, IsUnlocked,
+  ListAccounts, GetAccount, SaveAccount, DeleteAccount, GetSettings,
+  SaveSettings, BackupVault, SecureRandomBytes, CopySensitive
+} from '../interface.uts'
+
+export const hasVault: HasVault = function (): boolean {
+  return VaultNativeEngine.hasVault(UTSAndroid.getAppContext()!)
+}
+
+export const vaultPath: VaultPath = function (): string {
+  return VaultNativeEngine.vaultPath(UTSAndroid.getAppContext()!)
+}
+
+export const createVault: CreateVault = function (masterPassword: string): string {
+  return VaultNativeEngine.createVault(UTSAndroid.getAppContext()!, masterPassword)
+}
+
+export const unlockVault: UnlockVault = function (masterPassword: string): string {
+  return VaultNativeEngine.unlockVault(UTSAndroid.getAppContext()!, masterPassword)
+}
+
+export const lockVault: LockVault = function (): void {
+  VaultNativeEngine.lock()
+}
+
+export const isUnlocked: IsUnlocked = function (): boolean {
+  return VaultNativeEngine.isUnlocked()
+}
+
+export const listAccounts: ListAccounts = function (): string {
+  return VaultNativeEngine.listAccounts()
+}
+
+export const getAccount: GetAccount = function (id: string): string {
+  return VaultNativeEngine.getAccount(id)
+}
+
+export const saveAccount: SaveAccount = function (accountJson: string): string {
+  return VaultNativeEngine.saveAccount(UTSAndroid.getAppContext()!, accountJson)
+}
+
+export const deleteAccount: DeleteAccount = function (id: string): string {
+  return VaultNativeEngine.deleteAccount(UTSAndroid.getAppContext()!, id)
+}
+
+export const getSettings: GetSettings = function (): string {
+  return VaultNativeEngine.getSettings()
+}
+
+export const saveSettings: SaveSettings = function (settingsJson: string): string {
+  return VaultNativeEngine.saveSettings(UTSAndroid.getAppContext()!, settingsJson)
+}
+
+export const backupVault: BackupVault = function (): string {
+  return VaultNativeEngine.backupVault(UTSAndroid.getAppContext()!)
+}
+
+export const secureRandomBytes: SecureRandomBytes = function (length: number): number[] {
+  const nativeValues = VaultNativeEngine.secureRandomBytes(length.toInt())
+  const values: number[] = []
+  nativeValues.forEach((value: Int) => {
+    values.push(value.toDouble())
+  })
+  return values
+}
+
+export const copySensitive: CopySensitive = function (value: string, clearSeconds: number): void {
+  VaultNativeEngine.copySensitive(UTSAndroid.getAppContext()!, value, clearSeconds.toInt())
+}

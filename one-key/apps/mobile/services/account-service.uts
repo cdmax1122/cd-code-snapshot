@@ -1,0 +1,30 @@
+import { AccountDraft, AccountEntry, draftToEntry } from '@/core/domain/models.uts'
+import { vaultService, ServiceResult } from './native-vault.uts'
+
+function createId(): string {
+  const bytes = vaultService.randomBytes(16)
+  bytes[6] = (bytes[6] & 15) | 64
+  bytes[8] = (bytes[8] & 63) | 128
+  const hex = bytes.map((value) => value.toString(16).padStart(2, '0')).join('')
+  return `${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20)}`
+}
+
+export class AccountService {
+  list(query: string = ''): AccountEntry[] {
+    const normalized = query.trim().toLowerCase()
+    const entries = vaultService.accounts()
+    if (normalized.length == 0) return entries.sort((a, b) => b.updatedAt - a.updatedAt)
+    return entries.filter((entry) => {
+      const identity = `${entry.identity?.username ?? ''} ${entry.identity?.email ?? ''}`
+      return `${entry.title} ${entry.urls.join(' ')} ${identity} ${entry.tags.join(' ')}`.toLowerCase().indexOf(normalized) >= 0
+    }).sort((a, b) => b.updatedAt - a.updatedAt)
+  }
+  get(id: string): AccountEntry | null { return vaultService.account(id) }
+  saveDraft(draft: AccountDraft, createdAt: number = 0): ServiceResult {
+    if (draft.id.length == 0) draft.id = createId()
+    return vaultService.save(draftToEntry(draft, Date.now(), createdAt))
+  }
+  remove(id: string): ServiceResult { return vaultService.remove(id) }
+}
+
+export const accountService = new AccountService()

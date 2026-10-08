@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>城市模型导入与shader效果</title>
+</head>
+
+<body>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.169.0/build/three.module.js"
+            }
+        }
+    </script>
+    <script type="module">
+        import * as THREE from "three";
+        import { OrbitControls } from "https://unpkg.com/three@0.169.0/examples/jsm/controls/OrbitControls.js";
+        import { GLTFLoader } from "https://unpkg.com/three@0.169.0/examples/jsm/loaders/GLTFLoader.js";
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(4, 4, 4);
+
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+
+        const axesHelper = new THREE.AxesHelper(5);
+        scene.add(axesHelper);
+
+        // 添加光照
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(5, 5, 5);
+        scene.add(directionalLight);
+
+        // gltf模型加载
+        const loader = new GLTFLoader();
+        let globalTime = 0; // 全局时间变量
+        loader.load("./assets/shanghai/scene.gltf", function (gltf) {
+            const model = gltf.scene;
+            model.scale.set(5, 5, 5);
+            // 计算模型的边界框
+            const box = new THREE.Box3().setFromObject(model);
+            const size = box.getSize(new THREE.Vector3());
+            const center = box.getCenter(new THREE.Vector3());
+            // 将模型平移到世界中心 (0, 0, 0)
+            model.position.sub(center);
+            // 遍历模型，添加shader效果
+            model.traverse((child) => {
+                if (child.isMesh) {
+                    const mat = child.material;
+
+                    mat.onBeforeCompile = (shader) => {
+                        console.log(shader.vertexShader)
+                        // 添加uniform变量
+                        shader.uniforms.u_time = { value: 0 };
+                        shader.uniforms.u_center = { value: new THREE.Vector3(0, 0, 0) };
+                        shader.uniforms.u_color = { value: new THREE.Color('#00ffff') };
+                        shader.uniforms.u_thickness = { value: 1.0 };
+                        shader.uniforms.u_max_radius = { value: 8.0 };
+                        // 在顶点着色器中添加varying变量
+                        shader.vertexShader = shader.vertexShader.replace(
+                            '#include <common>',
+                            `
+                                #include <common>
+                                varying vec3 vWorldPosition;
+                            `
+                        );
+                        
+                        shader.vertexShader = shader.vertexShader.replace(
+                            'void main() {',
+                            `
+                                void main() {
+                                    vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+                                    vWorldPosition = worldPosition.xyz;
+                            `
+                        );
+                        
+                        // 声明uniform变量
+                        shader.fragmentShader = shader.fragmentShader.replace(
+                            'void main() {',
+                            `
+                                uniform float u_time;
+                                uniform vec3 u_center;
+                                uniform vec3 u_color;
+                                uniform float u_thickness;
+                                uniform float u_max_radius;
+                                varying vec3 vWorldPosition;
+                                void main() {
+                            `
+                        );
+                        // 末尾添加混合效果
+                        shader.fragmentShader = shader.fragmentShader.replace(
+                            '#include <dithering_fragment>',
+                            `
+                                #include <dithering_fragment>
+                                // 计算距离(视图空间还是3D场景位置，来自顶点着色器的声明)
+                                float dist = distance(vWorldPosition, u_center);
+                                // 半径增长
+                                float radius = u_max_radius * fract(u_time);
+                                // 环
+                                float ring = smoothstep(radius - u_thickness, radius, dist) - smoothstep(radius, radius + u_thickness, dist);
+                                // 范围外=原颜色，范围内=混合颜色
+                                vec3 finalColor = mix(gl_FragColor.rgb, u_color, ring);
+                                // 输出颜色
+                                gl_FragColor = vec4(finalColor, gl_FragColor.a);
+                            `
+                        );
+                        // 内置材质不同于shaderMaterial，需要手动保存shader，用于修改uniform变量
+                        mat.userData.shader = shader;
+                    }
+                    // 标记需要重新编译
+                    mat.needsUpdate = true;
+                }
+            })
+            scene.add(model);
+
+            animate();
+        });
+
+        function render() {
+            renderer.render(scene, camera);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // 使用全局时间变量，确保所有材质同步
+            globalTime += 0.01;
+            
+            scene.traverse((child) => {
+                if (child.isMesh && child.material.userData.shader) {
+                    const shader = child.material.userData.shader;
+                    shader.uniforms.u_time.value = globalTime; // 使用全局时间，否则会导致每个材质的时间不同步
+                }
+            });
+
+            controls.update();
+            render();
+        }
+    </script>
+</body>
+
+</html>

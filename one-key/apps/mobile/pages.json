@@ -1,0 +1,47 @@
+{
+  "pages": [
+    {
+      "path": "pages/launch/index",
+      "style": { "navigationStyle": "custom" }
+    },
+    {
+      "path": "pages/onboarding/index",
+      "style": { "navigationStyle": "custom" }
+    },
+    {
+      "path": "pages/unlock/index",
+      "style": { "navigationStyle": "custom" }
+    },
+    {
+      "path": "pages/vault/index",
+      "style": { "navigationStyle": "custom" }
+    },
+    {
+      "path": "pages/account/detail",
+      "style": { "navigationBarTitleText": "账户详情" }
+    },
+    {
+      "path": "pages/account/edit",
+      "style": { "navigationBarTitleText": "账户" }
+    },
+    {
+      "path": "pages/generator/index",
+      "style": { "navigationBarTitleText": "密码生成器" }
+    },
+    {
+      "path": "pages/security/index",
+      "style": { "navigationBarTitleText": "安全状态" }
+    },
+    {
+      "path": "pages/settings/index",
+      "style": { "navigationBarTitleText": "设置" }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "透明本地保险箱",
+    "navigationBarBackgroundColor": "#F7F8F6",
+    "backgroundColor": "#F7F8F6"
+  }
+}
+

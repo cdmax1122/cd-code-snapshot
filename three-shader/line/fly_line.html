@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>飞线移动-自定义进度属性</title>
+</head>
+
+<body>
+    <script type="module">
+        import * as THREE from "https://unpkg.com/three@0.169.0/build/three.module.js";
+
+        const config = {
+            width: 700,
+            height: 400
+        }
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, config.width / config.height, 0.1, 100);
+        camera.position.set(0, 0, 15);
+
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(config.width, config.height);
+        document.body.appendChild(renderer.domElement);
+
+        // 定义路径
+        const points = [];
+        points.push(new THREE.Vector3(-10, 0, 0));
+        points.push(new THREE.Vector3(0, 5, 0));
+        points.push(new THREE.Vector3(10, 0, 0));
+
+        // 创建几何体
+        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+        // 给几何体添加自定义 attribute：每个顶点一个进度值 [0,1]
+        const count = geometry.attributes.position.count;
+        const percents = new Float32Array(count);
+        for (let i = 0; i < count; i++) {
+            percents[i] = i / (count - 1);
+        }
+        // 光栅化会自动插值针对范围内的像素
+        // 类比：想象三个点分别是rgb颜色，然后形成的三角形中像素颜色是渐变的
+        geometry.setAttribute("aPercent", new THREE.BufferAttribute(percents, 1));
+
+        // ShaderMaterial
+        const material = new THREE.ShaderMaterial({
+            transparent: true,
+            uniforms: {
+                uTime: { value: 0.0 },
+                // 飞线长度
+                uLength: { value: 0.2 },
+                // 飞行速度
+                uSpeed: { value: 0.5 }
+            },
+            vertexShader: `
+                attribute float aPercent;
+                varying float vPercent;
+                void main() {
+                    vPercent = aPercent;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                varying float vPercent;
+                uniform float uTime;
+                uniform float uLength;
+                uniform float uSpeed;
+
+                void main() {
+                    // 计算头尾[tail, head] => 在[0,1]范围内的一段飞线进度
+                    // 平替 mod(uTime * uSpeed, 1)
+                    float head = fract(uTime * uSpeed);
+                    float tail = head - uLength;
+
+                    // 飞线范围判断
+                    float alpha = 0.0;
+                    // 飞线飞出一半剩一半
+                    if (tail < 0.0) {
+                        // 展示范围内的颜色
+                        if(vPercent >= 0.0 && vPercent <= head) alpha = 1.0;
+                        if(vPercent >= 1.0 + tail && vPercent <= 1.0) alpha = 1.0;
+                    } else {
+                        if(vPercent >= tail && vPercent <= head) alpha = 1.0;
+                    }
+
+                    // 颜色
+                    gl_FragColor = vec4(vec3(1.0,0.0,0.0), alpha);
+                }
+            `,
+        });
+
+        // 用 Line 替换 Mesh
+        const flyLine = new THREE.Line(geometry, material);
+        scene.add(flyLine);
+
+        // 在动画循环里更新时间
+        function animate() {
+            requestAnimationFrame(animate);
+            material.uniforms.uTime.value = performance.now() / 1000.0;
+            renderer.render(scene, camera);
+        }
+        animate();
+
+    </script>
+</body>
+
+</html>

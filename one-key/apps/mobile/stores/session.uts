@@ -1,0 +1,44 @@
+import { vaultService } from '../services/native-vault.uts'
+
+class SessionStore {
+  private lastActivityAt: number = Date.now()
+  private backgroundAt: number = 0
+  private autoLockSeconds: number = 300
+  private timerId: number = 0
+
+  refreshSettings(): void {
+    if (vaultService.unlocked()) this.autoLockSeconds = vaultService.settings().autoLockSeconds
+  }
+
+  recordActivity(): void {
+    this.lastActivityAt = Date.now()
+  }
+
+  startAutoLockMonitor(): void {
+    if (this.timerId > 0) return
+    this.timerId = setInterval(() => {
+      if (vaultService.unlocked() && Date.now() - this.lastActivityAt >= this.autoLockSeconds * 1000) {
+        this.lockAndReturn()
+      }
+    }, 5000) as number
+  }
+
+  handleBackground(): void {
+    this.backgroundAt = Date.now()
+  }
+
+  handleForeground(): void {
+    if (vaultService.unlocked() && this.backgroundAt > 0 && Date.now() - this.backgroundAt >= 30000) {
+      this.lockAndReturn()
+    }
+    this.backgroundAt = 0
+  }
+
+  lockAndReturn(): void {
+    vaultService.lock()
+    uni.reLaunch({ url: '/pages/unlock/index' })
+  }
+}
+
+export const sessionStore = new SessionStore()
+
